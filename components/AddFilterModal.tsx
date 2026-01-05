@@ -91,7 +91,7 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, dynamicOptions 
             value={value || ''}
             onChange={(e) => setValue(e.target.value)}
             placeholder={selectedField.placeholder}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-400"
             autoFocus
           />
         );
@@ -106,7 +106,7 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, dynamicOptions 
                 value={min || ''}
                 onChange={(e) => setValue([Number(e.target.value), max])}
                 placeholder="Min"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder-gray-400"
               />
               <span className="text-gray-500">and</span>
               <input
@@ -114,7 +114,7 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, dynamicOptions 
                 value={max || ''}
                 onChange={(e) => setValue([min, Number(e.target.value)])}
                 placeholder="Max"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder-gray-400"
               />
             </div>
           );
@@ -125,7 +125,7 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, dynamicOptions 
             value={value || ''}
             onChange={(e) => setValue(Number(e.target.value))}
             placeholder={selectedField.placeholder}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder-gray-400"
             autoFocus
           />
         );
@@ -161,7 +161,7 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, dynamicOptions 
           <select
             value={value || ''}
             onChange={(e) => setValue(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
           >
             <option value="">Select...</option>
             {selectedField.options?.map((opt) => (
@@ -201,7 +201,7 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, dynamicOptions 
           <select
             value={value === null ? '' : String(value)}
             onChange={(e) => setValue(e.target.value === 'true')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
           >
             <option value="">Select...</option>
             <option value="true">Yes</option>
@@ -218,14 +218,14 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, dynamicOptions 
                 type="date"
                 value={start || ''}
                 onChange={(e) => setValue([e.target.value, end])}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
               />
               <span className="text-gray-500">to</span>
               <input
                 type="date"
                 value={end || ''}
                 onChange={(e) => setValue([start, e.target.value])}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
               />
             </div>
           );
@@ -235,7 +235,7 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, dynamicOptions 
             type="date"
             value={value || ''}
             onChange={(e) => setValue(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
           />
         );
 
@@ -273,7 +273,7 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, dynamicOptions 
                 setSelectedOperator(null);
                 setValue(null);
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
             >
               <option value="">Choose a field...</option>
               {filterFields.map((field) => (
@@ -300,7 +300,7 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, dynamicOptions 
                   setSelectedOperator(e.target.value as FilterOperator);
                   setValue(null);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
               >
                 <option value="">Choose a condition...</option>
                 {selectedField.operators.map((op) => (
