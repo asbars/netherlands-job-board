@@ -7,18 +7,23 @@
 
 import { useState, useEffect } from 'react';
 import { FilterField, FilterCondition, FilterOperator } from '@/types/filters';
-import { FILTER_FIELDS, OPERATOR_LABELS } from '@/lib/filterConfig';
+import { getFilterFields, OPERATOR_LABELS } from '@/lib/filterConfig';
+import { DynamicOptions } from '@/lib/dynamicFilterOptions';
 
 interface AddFilterModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (filter: FilterCondition) => void;
+  dynamicOptions?: DynamicOptions;
 }
 
-export default function AddFilterModal({ isOpen, onClose, onAdd }: AddFilterModalProps) {
+export default function AddFilterModal({ isOpen, onClose, onAdd, dynamicOptions }: AddFilterModalProps) {
   const [selectedField, setSelectedField] = useState<FilterField | null>(null);
   const [selectedOperator, setSelectedOperator] = useState<FilterOperator | null>(null);
   const [value, setValue] = useState<any>(null);
+  
+  // Get filter fields with dynamic options
+  const filterFields = getFilterFields(dynamicOptions);
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -263,7 +268,7 @@ export default function AddFilterModal({ isOpen, onClose, onAdd }: AddFilterModa
             <select
               value={selectedField?.key || ''}
               onChange={(e) => {
-                const field = FILTER_FIELDS.find((f) => f.key === e.target.value);
+                const field = filterFields.find((f) => f.key === e.target.value);
                 setSelectedField(field || null);
                 setSelectedOperator(null);
                 setValue(null);
@@ -271,9 +276,10 @@ export default function AddFilterModal({ isOpen, onClose, onAdd }: AddFilterModa
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">Choose a field...</option>
-              {FILTER_FIELDS.map((field) => (
+              {filterFields.map((field) => (
                 <option key={field.key} value={field.key}>
                   {field.label}
+                  {field.options && field.options.length > 0 && ` (${field.options.length} options)`}
                 </option>
               ))}
             </select>

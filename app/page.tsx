@@ -11,26 +11,34 @@ import MetabaseStyleFilters from '@/components/MetabaseStyleFilters';
 import JobList from '@/components/JobList';
 import { fetchJobs } from '@/lib/supabase';
 import { applyFilters } from '@/lib/filterEngine';
+import { generateDynamicOptions, DynamicOptions, getEmptyOptions } from '@/lib/dynamicFilterOptions';
 
 export default function Home() {
   const [filters, setFilters] = useState<FilterCondition[]>([]);
   const [totalJobs, setTotalJobs] = useState(0);
   const [filteredCount, setFilteredCount] = useState(0);
+  const [dynamicOptions, setDynamicOptions] = useState<DynamicOptions>(getEmptyOptions());
 
-  // Load jobs to get counts
+  // Load jobs and generate dynamic filter options
   useEffect(() => {
-    async function loadJobCounts() {
+    async function loadJobsAndOptions() {
       try {
         const jobs = await fetchJobs();
         setTotalJobs(jobs.length);
+        
+        // Generate dynamic options from actual job data
+        const options = generateDynamicOptions(jobs);
+        setDynamicOptions(options);
+        
+        // Calculate filtered count
         const filtered = applyFilters(jobs, filters);
         setFilteredCount(filtered.length);
       } catch (error) {
-        console.error('Error loading job counts:', error);
+        console.error('Error loading jobs:', error);
       }
     }
 
-    loadJobCounts();
+    loadJobsAndOptions();
   }, [filters]);
 
   return (
@@ -55,6 +63,7 @@ export default function Home() {
                 onFiltersChange={setFilters}
                 resultCount={filteredCount}
                 totalCount={totalJobs}
+                dynamicOptions={dynamicOptions}
               />
             </div>
           </aside>

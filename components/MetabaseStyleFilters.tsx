@@ -10,12 +10,14 @@ import { FilterCondition } from '@/types/filters';
 import FilterPill from './FilterPill';
 import AddFilterModal from './AddFilterModal';
 import { getFilterDescription } from '@/lib/filterEngine';
+import { DynamicOptions } from '@/lib/dynamicFilterOptions';
 
 interface MetabaseStyleFiltersProps {
   filters: FilterCondition[];
   onFiltersChange: (filters: FilterCondition[]) => void;
   resultCount: number;
   totalCount: number;
+  dynamicOptions?: DynamicOptions;
 }
 
 export default function MetabaseStyleFilters({
@@ -23,6 +25,7 @@ export default function MetabaseStyleFilters({
   onFiltersChange,
   resultCount,
   totalCount,
+  dynamicOptions,
 }: MetabaseStyleFiltersProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -113,6 +116,7 @@ export default function MetabaseStyleFilters({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAdd={handleAddFilter}
+        dynamicOptions={dynamicOptions}
       />
     </div>
   );

@@ -4,8 +4,13 @@
  */
 
 import { FilterField, FilterOperator } from '@/types/filters';
+import { DynamicOptions } from './dynamicFilterOptions';
 
-export const FILTER_FIELDS: FilterField[] = [
+/**
+ * Get filter fields with dynamic options
+ */
+export function getFilterFields(dynamicOptions?: DynamicOptions): FilterField[] {
+  return [
   {
     key: 'title',
     label: 'Job Title',
@@ -27,18 +32,7 @@ export const FILTER_FIELDS: FilterField[] = [
     label: 'City',
     type: 'multiselect',
     operators: ['is_any_of', 'is_not_any_of'],
-    options: [
-      { value: 'Amsterdam', label: 'Amsterdam' },
-      { value: 'Rotterdam', label: 'Rotterdam' },
-      { value: 'Utrecht', label: 'Utrecht' },
-      { value: 'The Hague', label: 'The Hague' },
-      { value: 'Eindhoven', label: 'Eindhoven' },
-      { value: 'Groningen', label: 'Groningen' },
-      { value: 'Tilburg', label: 'Tilburg' },
-      { value: 'Almere', label: 'Almere' },
-      { value: 'Breda', label: 'Breda' },
-      { value: 'Nijmegen', label: 'Nijmegen' },
-    ],
+    options: dynamicOptions?.cities || [],
     description: 'Filter by city location',
   },
   {
@@ -46,14 +40,7 @@ export const FILTER_FIELDS: FilterField[] = [
     label: 'Employment Type',
     type: 'multiselect',
     operators: ['is_any_of', 'is_not_any_of'],
-    options: [
-      { value: 'Full Time', label: 'Full Time' },
-      { value: 'Part Time', label: 'Part Time' },
-      { value: 'Contract', label: 'Contract' },
-      { value: 'Internship', label: 'Internship' },
-      { value: 'Temporary', label: 'Temporary' },
-      { value: 'Volunteer', label: 'Volunteer' },
-    ],
+    options: dynamicOptions?.employmentTypes || [],
     description: 'Filter by employment type',
   },
   {
@@ -61,12 +48,7 @@ export const FILTER_FIELDS: FilterField[] = [
     label: 'Experience Level',
     type: 'select',
     operators: ['equals', 'not_equals', 'is_any_of'],
-    options: [
-      { value: '0-2', label: '0-2 years (Entry Level)' },
-      { value: '2-5', label: '2-5 years (Mid Level)' },
-      { value: '5-10', label: '5-10 years (Senior)' },
-      { value: '10+', label: '10+ years (Expert)' },
-    ],
+    options: dynamicOptions?.experienceLevels || [],
     description: 'Filter by required experience',
   },
   {
@@ -88,12 +70,7 @@ export const FILTER_FIELDS: FilterField[] = [
     label: 'Work Arrangement',
     type: 'select',
     operators: ['equals', 'not_equals', 'is_any_of'],
-    options: [
-      { value: 'Remote Solely', label: 'Remote Only' },
-      { value: 'Remote OK', label: 'Remote Optional' },
-      { value: 'Hybrid', label: 'Hybrid' },
-      { value: 'On-site', label: 'On-site' },
-    ],
+    options: dynamicOptions?.workArrangements || [],
     description: 'Work location arrangement',
   },
   {
@@ -115,20 +92,26 @@ export const FILTER_FIELDS: FilterField[] = [
   {
     key: 'source',
     label: 'Source',
-    type: 'text',
-    operators: ['equals', 'not_equals', 'contains'],
-    placeholder: 'e.g., greenhouse, lever',
+    type: 'multiselect',
+    operators: ['is_any_of', 'is_not_any_of'],
+    options: dynamicOptions?.sources || [],
     description: 'Job posting source/ATS',
   },
   {
     key: 'linkedin_org_industry',
     label: 'Industry',
-    type: 'text',
-    operators: ['contains', 'equals', 'not_equals'],
-    placeholder: 'e.g., Technology, Finance',
+    type: 'multiselect',
+    operators: ['is_any_of', 'is_not_any_of'],
+    options: dynamicOptions?.industries || [],
     description: 'Company industry',
   },
-];
+  ];
+}
+
+/**
+ * Static filter fields for fields that don't need dynamic options
+ */
+export const FILTER_FIELDS = getFilterFields();
 
 export const OPERATOR_LABELS: Record<FilterOperator, string> = {
   contains: 'contains',
