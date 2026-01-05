@@ -7,13 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "populate": "tsx scripts/populate-initial-jobs.ts"
+    "populate": "tsx scripts/populate-with-sdk.ts",
+    "test-apify": "tsx scripts/test-apify-access.ts"
   },
   "overrides": {
     "glob": "^11.0.0"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
+    "apify-client": "^2.21.0",
     "next": "^14.2.35",
     "react": "^18",
     "react-dom": "^18"
