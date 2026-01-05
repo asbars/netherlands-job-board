@@ -37,15 +37,15 @@ Data comes from 41 ATS platforms including:
 - **Styling**: Tailwind CSS
 - **Database**: Supabase (PostgreSQL)
 - **Data Source**: Apify Career Site APIs
-- **Deployment**: Vercel (recommended)
-- **Automation**: Vercel Cron Jobs
+- **Deployment**: Railway.app
+- **Automation**: External Cron Service (cron-job.org or GitHub Actions)
 
 ## 📋 Prerequisites
 
 - Node.js 18+ installed
 - A Supabase account and project
 - An Apify account with API access
-- A Vercel account (for deployment)
+- A Railway.app account (for deployment)
 
 ## 🚦 Getting Started
 
@@ -153,20 +153,17 @@ export async function GET(request: Request) {
 }
 ```
 
-### Configure Vercel Cron
+### Configure External Cron
 
-Add to `vercel.json`:
+Since Railway doesn't have built-in cron, use **cron-job.org** (free):
 
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron/daily-sync",
-      "schedule": "0 5 * * *"
-    }
-  ]
-}
-```
+1. Sign up at [cron-job.org](https://cron-job.org)
+2. Create cron job:
+   - URL: `https://your-app.railway.app/api/cron/daily-sync`
+   - Schedule: `0 5 * * *`
+   - Add header: `Authorization: Bearer your-cron-secret`
+
+**Alternative**: Use GitHub Actions (see `RAILWAY_DEPLOYMENT.md`)
 
 ## 🎨 Customization
 

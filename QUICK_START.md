@@ -93,10 +93,10 @@ Refresh your local site - you should see the job!
    git push -u origin main
    ```
 
-2. **Deploy to Vercel**:
-   - Go to [vercel.com](https://vercel.com)
-   - Click **New Project**
-   - Import your GitHub repo
+2. **Deploy to Railway**:
+   - Go to [railway.app](https://railway.app)
+   - Click **New Project** → **Deploy from GitHub repo**
+   - Select your repository
    - Add all environment variables from `.env.local`
    - Click **Deploy**
 
@@ -105,8 +105,10 @@ Refresh your local site - you should see the job!
    - This will load all current jobs from Apify Feed (~$30 one-time cost)
 
 4. **Set Up Cron Jobs**:
-   - Vercel automatically reads `vercel.json` for cron configuration
-   - Daily sync will run at 5am automatically
+   - Railway doesn't have built-in cron
+   - Use external service: [cron-job.org](https://cron-job.org) (free)
+   - Or use GitHub Actions (see `RAILWAY_DEPLOYMENT.md`)
+   - Daily sync will call your API endpoint at 5am
 
 ### Budget Planning
 
