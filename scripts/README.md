@@ -1,24 +1,25 @@
 # Scripts Directory
 
-## populate-initial-jobs.ts
+## populate-with-sdk.ts
 
-Manual script to populate the database with job data from Apify API.
+Manual script to populate the database with job data from Apify API using the official Apify SDK.
 
 ### What it does:
 
 1. ✅ Validates environment variables
-2. 🚀 Calls Apify Career Site Job Listing API
-3. ⏳ Waits for the Apify run to complete
+2. 🚀 Calls Apify Career Site Job Listing API (using SDK)
+3. ⏳ Waits for the Apify run to complete automatically
 4. 📥 Fetches job data from the dataset
 5. 📋 Displays sample jobs in the console
 6. 💾 Inserts jobs into Supabase database (batch of 100)
 7. 📊 Shows summary and cost
 8. 📝 Logs usage to database
+9. 📍 Shows location breakdown
 
 ### Configuration:
 
 - **Timeframe**: Last 24 hours
-- **Country**: Netherlands
+- **Location**: Netherlands (using `locationSearch` parameter)
 - **Max Items**: 1000 jobs (for testing)
 - **Include AI fields**: Yes
 - **Include LinkedIn data**: Yes
@@ -27,13 +28,13 @@ Manual script to populate the database with job data from Apify API.
 
 1. Create `.env.local` file with your credentials:
    ```bash
-   cp .env.local.example .env.local
+   cp env.local.template .env.local
    # Then edit .env.local with your actual values
    ```
 
 2. Required environment variables:
    - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` (admin key for backend scripts)
    - `APIFY_API_TOKEN`
 
 ### Usage:
@@ -41,29 +42,29 @@ Manual script to populate the database with job data from Apify API.
 ```bash
 # Run the population script
 npm run populate
+
+# Or run directly
+npx tsx scripts/populate-with-sdk.ts
 ```
 
 ### What you'll see:
 
 ```
 ═══════════════════════════════════════════════════════════
-  Netherlands Job Board - Initial Population Script
+  Netherlands Job Board - Initial Population Script (SDK)
 ═══════════════════════════════════════════════════════════
 
 ✅ Environment variables validated
 
 🚀 Starting Apify Career Site Job Listing API...
    Timeframe: Last 24 hours
-   Country: Netherlands
+   Location Search: Netherlands
    Include AI fields: Yes
    Include LinkedIn data: Yes
 
 📋 Run ID: xxxxx
-📦 Dataset ID: xxxxx
-
-⏳ Waiting for Apify run xxxxx to complete...
-   Status: RUNNING...
-✅ Apify run completed successfully
+   Status: SUCCEEDED
+   Dataset ID: xxxxx
 
 📥 Fetching job data from dataset...
 ✅ Retrieved 247 jobs from Apify
@@ -85,20 +86,22 @@ npm run populate
 💾 Inserting jobs into Supabase database...
 
    Processing batch 1/3 (100 jobs)...
-   ✅ Batch complete (100 new, 0 updated)
+   ✅ Batch complete (100 jobs processed)
    Processing batch 2/3 (100 jobs)...
-   ✅ Batch complete (98 new, 2 updated)
+   ✅ Batch complete (100 jobs processed)
    Processing batch 3/3 (47 jobs)...
-   ✅ Batch complete (47 new, 0 updated)
+   ✅ Batch complete (47 jobs processed)
 
 📊 Summary:
-   ✅ Successfully inserted/updated: 245 jobs
-   ⏭️  Skipped (duplicates): 2 jobs
+   ✅ Successfully processed: 247 jobs
 
 ✅ Usage logged to database
+📍 Location Breakdown:
+   Netherlands: 245 jobs
+   Belgium: 2 jobs
 
 🔍 Verifying data in database...
-✅ Total active jobs in database: 245
+✅ Total active jobs in database: 247
 
 💰 Cost Summary:
    Jobs fetched: 247
@@ -109,19 +112,42 @@ npm run populate
 ═══════════════════════════════════════════════════════════
 ```
 
-### Timeframe Options:
+### Location Search Options:
 
-You can modify the script to use different timeframes:
+The script uses the `locationSearch` parameter (array format):
 
 ```typescript
-// In populate-initial-jobs.ts, line ~114
-body: JSON.stringify({
-  timeframe: '24hours',  // Options: '1hour', '24hours', '7days'
-  country: 'Netherlands',
+// Single location
+locationSearch: ['Netherlands']
+
+// Multiple locations
+locationSearch: ['Amsterdam', 'Rotterdam', 'Utrecht']
+
+// With exclusions
+locationSearch: ['Netherlands']
+locationExclusionSearch: ['Amsterdam']  // All Netherlands except Amsterdam
+
+// ⚠️ Don't use abbreviations!
+locationSearch: ['United Kingdom']  // ✅ Correct
+locationSearch: ['UK']               // ❌ Wrong
+```
+
+### Other Search Parameters:
+
+You can modify the script to use additional filters:
+
+```typescript
+// In populate-with-sdk.ts, modify the call parameters
+const run = await apifyClient.actor(CAREER_SITE_API_ACTOR_ID).call({
+  timeframe: '24hours',              // '1hour', '24hours', '7days'
+  locationSearch: ['Netherlands'],   // Location filter (required array)
+  titleSearch: ['Software', 'Developer'],  // Filter by job title
+  organizationSearch: ['Google'],    // Filter by company
+  organizationExclusionSearch: ['Recruitment'],  // Exclude agencies
   maxItems: 1000,
   include_ai: true,
   include_li: true,
-}),
+});
 ```
 
 ### Cost Calculation:
@@ -133,43 +159,36 @@ body: JSON.stringify({
 
 ### Troubleshooting:
 
-#### Missing environment variables
+#### Missing SERVICE_ROLE_KEY
 ```
 ❌ Missing required environment variables:
-   - NEXT_PUBLIC_SUPABASE_URL
-```
-**Solution**: Create `.env.local` file with all required variables
-
-#### No jobs found
-```
-⚠️  No jobs found for the last 24 hours in Netherlands.
-```
-**Solution**: Normal if no new postings. Try `'7days'` timeframe
-
-#### Database connection error
-```
-❌ Error inserting jobs: connection refused
+   - SUPABASE_SERVICE_ROLE_KEY
 ```
 **Solution**: 
-- Check Supabase URL and key
-- Verify your IP is allowed (if using IP restrictions)
-- Check if Supabase project is paused
+1. Go to Supabase Dashboard → Settings → API
+2. Copy the `service_role` key (secret key)
+3. Add to `.env.local`: `SUPABASE_SERVICE_ROLE_KEY=your_key_here`
 
-#### Apify API error
+#### RLS Policy Error
 ```
-❌ Apify API error: 401 - Unauthorized
+❌ Error in batch: new row violates row-level security policy
 ```
-**Solution**: Verify your `APIFY_API_TOKEN` is correct
+**Solution**: Use `SUPABASE_SERVICE_ROLE_KEY` instead of `ANON_KEY`
 
-### Running with different parameters:
-
-To fetch more jobs or change timeframe, edit the script directly:
-
-```typescript
-// Line ~114 in populate-initial-jobs.ts
-timeframe: '7days',     // Get last 7 days instead
-maxItems: 2000,         // Increase limit
+#### Actor Not Found (404)
 ```
+❌ Actor not found or not accessible!
+```
+**Solution**: 
+1. Visit https://apify.com/fantastic-jobs/career-site-job-listing-api
+2. Click "Try for free" to subscribe
+3. Verify your API token is correct
+
+#### Invalid locationSearch
+```
+❌ Input is not valid: Field input.locationSearch must be array
+```
+**Solution**: Use array format: `locationSearch: ['Netherlands']`
 
 ### Verifying data:
 
@@ -179,11 +198,13 @@ After running, check your Supabase database:
 -- Total jobs
 SELECT COUNT(*) FROM jobmarket_jobs WHERE status = 'active';
 
--- Jobs by source
-SELECT source, COUNT(*) as count 
+-- Jobs by country
+SELECT 
+  jsonb_array_elements_text(countries_derived) as country,
+  COUNT(*) as count 
 FROM jobmarket_jobs 
 WHERE status = 'active'
-GROUP BY source 
+GROUP BY country 
 ORDER BY count DESC;
 
 -- Jobs with AI data
@@ -205,3 +226,18 @@ After successful population:
 3. Verify data quality
 4. Set up automated cron jobs (when ready)
 
+## test-sdk.ts
+
+Diagnostic script to test Apify API access and actor availability.
+
+### Usage:
+
+```bash
+npm run test-apify
+```
+
+This will verify:
+- ✅ API token is valid
+- ✅ User account is authenticated
+- ✅ Target actor is accessible
+- ✅ You're subscribed to the actor
