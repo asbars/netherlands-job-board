@@ -2,10 +2,10 @@ import { ApifyJobData, ApifyRunConfig } from '@/types/job';
 
 const APIFY_API_TOKEN = process.env.APIFY_API_TOKEN || '';
 
-// Apify Actor IDs
-const CAREER_SITE_API_ACTOR_ID = 'fantastic-jobs/career-site-job-listing-api';
-const CAREER_SITE_FEED_ACTOR_ID = 'fantastic-jobs/career-site-job-listing-feed';
-const EXPIRED_JOBS_ACTOR_ID = 'fantastic-jobs/career-site-job-listing-expired-jobs';
+// Apify Actor IDs (note: using ~ not / for API calls)
+const CAREER_SITE_API_ACTOR_ID = 'fantastic-jobs~career-site-job-listing-api';
+const CAREER_SITE_FEED_ACTOR_ID = 'fantastic-jobs~career-site-job-listing-feed';
+const EXPIRED_JOBS_ACTOR_ID = 'fantastic-jobs~career-site-job-listing-expired-jobs';
 
 /**
  * Fetch new jobs from Apify Career Site Job Listing API (incremental)

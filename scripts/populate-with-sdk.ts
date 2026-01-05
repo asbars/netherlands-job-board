@@ -19,18 +19,18 @@ import { createClient } from '@supabase/supabase-js';
 
 // Environment variables
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const APIFY_API_TOKEN = process.env.APIFY_API_TOKEN || '';
 
-// Apify Actor ID for incremental API
-const CAREER_SITE_API_ACTOR_ID = 'fantastic-jobs/career-site-job-listing-api';
+// Apify Actor ID for incremental API (note: using ~ not / for API calls)
+const CAREER_SITE_API_ACTOR_ID = 'fantastic-jobs~career-site-job-listing-api';
 
 // Validate environment variables
 function validateEnvironment() {
   const missing: string[] = [];
   
   if (!SUPABASE_URL) missing.push('NEXT_PUBLIC_SUPABASE_URL');
-  if (!SUPABASE_ANON_KEY) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  if (!SUPABASE_SERVICE_ROLE_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY');
   if (!APIFY_API_TOKEN) missing.push('APIFY_API_TOKEN');
   
   if (missing.length > 0) {
@@ -38,6 +38,8 @@ function validateEnvironment() {
     missing.forEach(v => console.error(`   - ${v}`));
     console.error('\nMake sure your .env.local file is set up correctly.');
     console.error('Get your Apify token from: https://console.apify.com/account/integrations');
+    console.error('Get your Supabase SERVICE_ROLE key from: https://supabase.com/dashboard (Settings > API)');
+    console.error('\n⚠️  Note: SERVICE_ROLE key is needed for backend scripts to bypass RLS policies.');
     process.exit(1);
   }
   
@@ -49,7 +51,7 @@ const apifyClient = new ApifyClient({
   token: APIFY_API_TOKEN,
 });
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 /**
  * Fetch jobs from Apify API (last 24 hours)

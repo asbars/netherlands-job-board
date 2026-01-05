@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "populate": "tsx scripts/populate-with-sdk.ts",
-    "test-apify": "tsx scripts/test-apify-access.ts"
+    "test-apify": "tsx scripts/test-sdk.ts"
   },
   "overrides": {
     "glob": "^11.0.0"

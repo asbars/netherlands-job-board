@@ -62,9 +62,9 @@ async function testApifyAccess() {
       console.log(`✅ Found ${actorsData.data.total} actors available\n`);
       
       // Check if our actor is in the list
-      const targetActor = 'fantastic-jobs/career-site-job-listing-api';
+      const targetActor = 'fantastic-jobs~career-site-job-listing-api';
       const hasActor = actorsData.data.items.some((a: any) => 
-        a.id === targetActor || a.username + '/' + a.name === targetActor
+        a.id === targetActor || a.username + '~' + a.name === targetActor
       );
       
       if (hasActor) {
@@ -81,8 +81,8 @@ async function testApifyAccess() {
   // Test 3: Try to get actor details directly
   console.log('\nTest 3: Checking actor details...');
   const actorIds = [
-    'fantastic-jobs/career-site-job-listing-api',
-    'fantastic-jobs~career-site-job-listing-api', // Alternative format
+    'fantastic-jobs~career-site-job-listing-api', // Correct API format
+    'fantastic-jobs/career-site-job-listing-api', // UI format (won't work in API)
   ];
   
   for (const actorId of actorIds) {

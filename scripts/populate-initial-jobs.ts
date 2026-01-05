@@ -22,8 +22,8 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const APIFY_API_TOKEN = process.env.APIFY_API_TOKEN || '';
 
-// Apify Actor ID for incremental API
-const CAREER_SITE_API_ACTOR_ID = 'fantastic-jobs/career-site-job-listing-api';
+// Apify Actor ID for incremental API (note: using ~ not / for API calls)
+const CAREER_SITE_API_ACTOR_ID = 'fantastic-jobs~career-site-job-listing-api';
 
 // Validate environment variables
 function validateEnvironment() {
