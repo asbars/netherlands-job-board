@@ -272,7 +272,12 @@ export interface ApifyJobData {
 
 export interface ApifyRunConfig {
   timeframe?: '1hour' | '24hours' | '7days';
-  country?: string;
+  locationSearch?: string[]; // Array of location terms to search (e.g., ['Netherlands'])
+  locationExclusionSearch?: string[]; // Array of location terms to exclude
+  titleSearch?: string[]; // Array of terms to search in job titles
+  titleExclusionSearch?: string[]; // Array of terms to exclude from job titles
+  organizationSearch?: string[]; // Array of terms to search in organization names
+  organizationExclusionSearch?: string[]; // Array of terms to exclude from organization names
   limit?: number;
   include_ai?: boolean;
   include_li?: boolean;

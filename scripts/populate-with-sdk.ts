@@ -59,7 +59,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 async function fetchJobsFromApify(): Promise<any[]> {
   console.log('🚀 Starting Apify Career Site Job Listing API...');
   console.log('   Timeframe: Last 24 hours');
-  console.log('   Country: Netherlands');
+  console.log('   Location Search: Netherlands');
   console.log('   Include AI fields: Yes');
   console.log('   Include LinkedIn data: Yes\n');
   
@@ -67,7 +67,7 @@ async function fetchJobsFromApify(): Promise<any[]> {
     // Start the actor run
     const run = await apifyClient.actor(CAREER_SITE_API_ACTOR_ID).call({
       timeframe: '24hours',
-      country: 'Netherlands',
+      locationSearch: ['Netherlands'], // Filter jobs by location (must be array, no abbreviations!)
       maxItems: 1000, // Limit for initial test
       include_ai: true,
       include_li: true,
@@ -313,6 +313,22 @@ async function main() {
     // Step 5: Log usage
     const cost = jobs.length * 0.012; // $0.012 per job for API
     await logApifyUsage(jobs.length, cost);
+    
+    // Display location breakdown
+    console.log('📍 Location Breakdown:');
+    const locationCounts: Record<string, number> = {};
+    jobs.forEach(job => {
+      const countries = job.countries_derived || [];
+      countries.forEach((country: string) => {
+        locationCounts[country] = (locationCounts[country] || 0) + 1;
+      });
+    });
+    Object.entries(locationCounts)
+      .sort(([, a], [, b]) => b - a)
+      .forEach(([country, count]) => {
+        console.log(`   ${country}: ${count} jobs`);
+      });
+    console.log('');
     
     // Step 6: Verify data in database
     console.log('🔍 Verifying data in database...');

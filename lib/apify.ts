@@ -1,6 +1,12 @@
+import { ApifyClient } from 'apify-client';
 import { ApifyJobData, ApifyRunConfig } from '@/types/job';
 
 const APIFY_API_TOKEN = process.env.APIFY_API_TOKEN || '';
+
+// Initialize Apify Client
+const apifyClient = new ApifyClient({
+  token: APIFY_API_TOKEN,
+});
 
 // Apify Actor IDs (note: using ~ not / for API calls)
 const CAREER_SITE_API_ACTOR_ID = 'fantastic-jobs~career-site-job-listing-api';
@@ -14,57 +20,66 @@ const EXPIRED_JOBS_ACTOR_ID = 'fantastic-jobs~career-site-job-listing-expired-jo
 export async function fetchNewJobsFromAPI(config: ApifyRunConfig = {}): Promise<ApifyJobData[]> {
   const { 
     timeframe = '24hours', 
-    country = 'Netherlands', 
+    locationSearch = ['Netherlands'], 
+    locationExclusionSearch,
+    titleSearch,
+    titleExclusionSearch,
+    organizationSearch,
+    organizationExclusionSearch,
     limit = 5000,
     include_ai = true,
     include_li = true 
   } = config;
   
-  console.log(`Fetching new jobs from Apify API (timeframe: ${timeframe}, country: ${country})`);
+  console.log(`Fetching new jobs from Apify API (timeframe: ${timeframe}, location: ${locationSearch.join(', ')})`);
   
   if (!APIFY_API_TOKEN) {
     throw new Error('APIFY_API_TOKEN environment variable is not set');
   }
   
   try {
-    // Start the actor run
-    const runResponse = await fetch(
-      `https://api.apify.com/v2/acts/${CAREER_SITE_API_ACTOR_ID}/runs`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${APIFY_API_TOKEN}`,
-        },
-        body: JSON.stringify({
-          timeframe,
-          country,
-          maxItems: limit,
-          include_ai,
-          include_li,
-        }),
-      }
-    );
-
-    if (!runResponse.ok) {
-      const errorText = await runResponse.text();
-      throw new Error(`Apify API error: ${runResponse.status} - ${errorText}`);
+    // Build the input object (only include defined search parameters)
+    const input: Record<string, any> = {
+      timeframe,
+      maxItems: limit,
+      include_ai,
+      include_li,
+    };
+    
+    if (locationSearch && locationSearch.length > 0) {
+      input.locationSearch = locationSearch;
     }
-
-    const runData = await runResponse.json();
-    const runId = runData.data.id;
-    const datasetId = runData.data.defaultDatasetId;
+    if (locationExclusionSearch && locationExclusionSearch.length > 0) {
+      input.locationExclusionSearch = locationExclusionSearch;
+    }
+    if (titleSearch && titleSearch.length > 0) {
+      input.titleSearch = titleSearch;
+    }
+    if (titleExclusionSearch && titleExclusionSearch.length > 0) {
+      input.titleExclusionSearch = titleExclusionSearch;
+    }
+    if (organizationSearch && organizationSearch.length > 0) {
+      input.organizationSearch = organizationSearch;
+    }
+    if (organizationExclusionSearch && organizationExclusionSearch.length > 0) {
+      input.organizationExclusionSearch = organizationExclusionSearch;
+    }
     
-    console.log(`Actor run started: ${runId}`);
+    // Start the actor run using SDK
+    const run = await apifyClient.actor(CAREER_SITE_API_ACTOR_ID).call(input);
     
-    // Wait for the run to complete
-    await waitForRunCompletion(runId);
+    console.log(`Run completed: ${run.id}, status: ${run.status}`);
     
-    // Fetch the results
-    const jobs = await fetchDatasetItems(datasetId);
-    console.log(`Fetched ${jobs.length} new jobs from Apify API`);
+    if (run.status !== 'SUCCEEDED') {
+      throw new Error(`Actor run failed with status: ${run.status}`);
+    }
     
-    return jobs;
+    // Fetch the results from the dataset
+    const { items } = await apifyClient.dataset(run.defaultDatasetId).listItems();
+    
+    console.log(`Fetched ${items.length} new jobs from Apify API`);
+    
+    return items;
   } catch (error) {
     console.error('Error fetching new jobs from Apify API:', error);
     throw error;
@@ -77,55 +92,49 @@ export async function fetchNewJobsFromAPI(config: ApifyRunConfig = {}): Promise<
  */
 export async function fetchAllJobsFromFeed(config: ApifyRunConfig = {}): Promise<ApifyJobData[]> {
   const { 
-    country = 'Netherlands', 
+    locationSearch = ['Netherlands'], 
+    locationExclusionSearch,
     limit = 20000,
     include_ai = true,
     include_li = true 
   } = config;
   
-  console.log(`Fetching all active jobs from Apify Feed (country: ${country})`);
+  console.log(`Fetching all active jobs from Apify Feed (location: ${locationSearch.join(', ')})`);
   
   if (!APIFY_API_TOKEN) {
     throw new Error('APIFY_API_TOKEN environment variable is not set');
   }
   
   try {
-    const runResponse = await fetch(
-      `https://api.apify.com/v2/acts/${CAREER_SITE_FEED_ACTOR_ID}/runs`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${APIFY_API_TOKEN}`,
-        },
-        body: JSON.stringify({
-          country,
-          maxItems: limit,
-          include_ai,
-          include_li,
-        }),
-      }
-    );
-
-    if (!runResponse.ok) {
-      const errorText = await runResponse.text();
-      throw new Error(`Apify Feed API error: ${runResponse.status} - ${errorText}`);
+    // Build the input object
+    const input: Record<string, any> = {
+      maxItems: limit,
+      include_ai,
+      include_li,
+    };
+    
+    if (locationSearch && locationSearch.length > 0) {
+      input.locationSearch = locationSearch;
     }
-
-    const runData = await runResponse.json();
-    const runId = runData.data.id;
-    const datasetId = runData.data.defaultDatasetId;
+    if (locationExclusionSearch && locationExclusionSearch.length > 0) {
+      input.locationExclusionSearch = locationExclusionSearch;
+    }
     
-    console.log(`Feed run started: ${runId}`);
+    // Start the actor run using SDK
+    const run = await apifyClient.actor(CAREER_SITE_FEED_ACTOR_ID).call(input);
     
-    // Wait for completion
-    await waitForRunCompletion(runId);
+    console.log(`Feed run completed: ${run.id}, status: ${run.status}`);
     
-    // Fetch results
-    const jobs = await fetchDatasetItems(datasetId);
-    console.log(`Fetched ${jobs.length} jobs from Apify Feed`);
+    if (run.status !== 'SUCCEEDED') {
+      throw new Error(`Feed actor run failed with status: ${run.status}`);
+    }
     
-    return jobs;
+    // Fetch the results from the dataset
+    const { items } = await apifyClient.dataset(run.defaultDatasetId).listItems();
+    
+    console.log(`Fetched ${items.length} jobs from Apify Feed`);
+    
+    return items;
   } catch (error) {
     console.error('Error fetching jobs from Apify Feed:', error);
     throw error;
