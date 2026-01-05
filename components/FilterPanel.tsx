@@ -19,11 +19,18 @@ export default function FilterPanel({ filters, onFilterChange }: FilterPanelProp
     onFilterChange({
       title: '',
       organization: '',
-      location: '',
-      job_type: '',
-      experience_level: '',
-      remote_allowed: null,
       description: '',
+      city: '',
+      country: '',
+      employment_type: '',
+      experience_level: '',
+      remote_only: null,
+      work_arrangement: '',
+      min_salary: undefined,
+      max_salary: undefined,
+      skills: [],
+      visa_sponsorship: null,
+      posted_within_days: undefined,
     });
   };
 
@@ -69,27 +76,27 @@ export default function FilterPanel({ filters, onFilterChange }: FilterPanelProp
         </div>
 
         <div>
-          <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1.5">
-            Location
+          <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1.5">
+            City
           </label>
           <input
             type="text"
-            id="location"
-            value={filters.location}
-            onChange={(e) => handleInputChange('location', e.target.value)}
+            id="city"
+            value={filters.city}
+            onChange={(e) => handleInputChange('city', e.target.value)}
             placeholder="Amsterdam, Rotterdam..."
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow text-sm"
           />
         </div>
 
         <div>
-          <label htmlFor="job_type" className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label htmlFor="employment_type" className="block text-sm font-medium text-gray-700 mb-1.5">
             Job Type
           </label>
           <select
-            id="job_type"
-            value={filters.job_type}
-            onChange={(e) => handleInputChange('job_type', e.target.value)}
+            id="employment_type"
+            value={filters.employment_type}
+            onChange={(e) => handleInputChange('employment_type', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow text-sm"
           >
             <option value="">All Types</option>
@@ -127,8 +134,8 @@ export default function FilterPanel({ filters, onFilterChange }: FilterPanelProp
               <input
                 type="radio"
                 name="remote"
-                checked={filters.remote_allowed === null}
-                onChange={() => handleInputChange('remote_allowed', null)}
+                checked={filters.remote_only === null}
+                onChange={() => handleInputChange('remote_only', null)}
                 className="mr-2"
               />
               <span className="text-sm text-gray-700">All jobs</span>
@@ -137,8 +144,8 @@ export default function FilterPanel({ filters, onFilterChange }: FilterPanelProp
               <input
                 type="radio"
                 name="remote"
-                checked={filters.remote_allowed === true}
-                onChange={() => handleInputChange('remote_allowed', true)}
+                checked={filters.remote_only === true}
+                onChange={() => handleInputChange('remote_only', true)}
                 className="mr-2"
               />
               <span className="text-sm text-gray-700">Remote only</span>
@@ -147,8 +154,8 @@ export default function FilterPanel({ filters, onFilterChange }: FilterPanelProp
               <input
                 type="radio"
                 name="remote"
-                checked={filters.remote_allowed === false}
-                onChange={() => handleInputChange('remote_allowed', false)}
+                checked={filters.remote_only === false}
+                onChange={() => handleInputChange('remote_only', false)}
                 className="mr-2"
               />
               <span className="text-sm text-gray-700">On-site only</span>

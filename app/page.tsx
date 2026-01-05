@@ -9,11 +9,18 @@ export default function Home() {
   const [filters, setFilters] = useState<FilterState>({
     title: '',
     organization: '',
-    location: '',
-    job_type: '',
-    experience_level: '',
-    remote_allowed: null,
     description: '',
+    city: '',
+    country: '',
+    employment_type: '',
+    experience_level: '',
+    remote_only: null,
+    work_arrangement: '',
+    min_salary: undefined,
+    max_salary: undefined,
+    skills: [],
+    visa_sponsorship: null,
+    posted_within_days: undefined,
   });
 
   return (

@@ -39,22 +39,26 @@ export default function JobList({ filters }: JobListProps) {
     const organizationMatch = !filters.organization || 
       job.organization.toLowerCase().includes(filters.organization.toLowerCase());
     
-    const locationMatch = !filters.location || 
-      (job.location && job.location.toLowerCase().includes(filters.location.toLowerCase()));
+    // Check if job's cities match the filter (using cities_derived array)
+    const cityMatch = !filters.city || 
+      (job.cities_derived && JSON.stringify(job.cities_derived).toLowerCase().includes(filters.city.toLowerCase()));
     
-    const jobTypeMatch = !filters.job_type || 
-      job.job_type === filters.job_type;
+    // Check employment type (job.employment_type is an array)
+    const jobTypeMatch = !filters.employment_type || 
+      (job.employment_type && job.employment_type.includes(filters.employment_type));
     
+    // Check AI experience level
     const experienceMatch = !filters.experience_level || 
-      job.experience_level === filters.experience_level;
+      job.ai_experience_level === filters.experience_level;
     
-    const remoteMatch = filters.remote_allowed === null || 
-      job.remote_allowed === filters.remote_allowed;
+    // Check remote (using remote_derived boolean)
+    const remoteMatch = filters.remote_only === null || 
+      job.remote_derived === filters.remote_only;
     
     const descriptionMatch = !filters.description || 
-      job.description_html.toLowerCase().includes(filters.description.toLowerCase());
+      (job.description_html && job.description_html.toLowerCase().includes(filters.description.toLowerCase()));
 
-    return titleMatch && organizationMatch && locationMatch && 
+    return titleMatch && organizationMatch && cityMatch && 
            jobTypeMatch && experienceMatch && remoteMatch && descriptionMatch;
   });
 

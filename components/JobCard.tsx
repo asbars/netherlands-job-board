@@ -34,26 +34,26 @@ export default function JobCard({ job }: JobCardProps) {
             {job.organization}
           </p>
           <div className="flex flex-wrap gap-2 text-sm text-gray-600">
-            {job.location && (
+            {job.cities_derived && job.cities_derived.length > 0 && (
               <span className="flex items-center">
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                {job.location}
+                {Array.isArray(job.cities_derived) ? job.cities_derived.slice(0, 2).join(', ') : JSON.stringify(job.cities_derived).replace(/[\[\]"]/g, '')}
               </span>
             )}
-            {job.job_type && (
+            {job.employment_type && job.employment_type.length > 0 && (
               <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-md">
-                {job.job_type}
+                {job.employment_type[0]}
               </span>
             )}
-            {job.experience_level && (
+            {job.ai_experience_level && (
               <span className="px-2 py-1 bg-green-100 text-green-700 rounded-md">
-                {job.experience_level}
+                {job.ai_experience_level}
               </span>
             )}
-            {job.remote_allowed && (
+            {job.remote_derived && (
               <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-md">
                 Remote
               </span>
@@ -65,9 +65,14 @@ export default function JobCard({ job }: JobCardProps) {
         </div>
       </div>
 
-      {job.salary_range && (
+      {(job.ai_salary_minvalue || job.ai_salary_value) && (
         <div className="mb-4 text-sm font-semibold text-green-600">
-          {job.salary_range}
+          {job.ai_salary_minvalue && job.ai_salary_maxvalue 
+            ? `€${job.ai_salary_minvalue.toLocaleString()} - €${job.ai_salary_maxvalue.toLocaleString()} ${job.ai_salary_unittext || ''}`
+            : job.ai_salary_value 
+            ? `€${job.ai_salary_value.toLocaleString()} ${job.ai_salary_unittext || ''}`
+            : null
+          }
         </div>
       )}
 
@@ -90,15 +95,15 @@ export default function JobCard({ job }: JobCardProps) {
         </div>
       )}
 
-      {job.company_size && (
+      {job.linkedin_org_size && (
         <div className="mb-3 text-sm text-gray-600">
-          <span className="font-medium">Company size:</span> {job.company_size}
+          <span className="font-medium">Company size:</span> {job.linkedin_org_size}
         </div>
       )}
 
-      {job.industry && (
+      {job.linkedin_org_industry && (
         <div className="mb-3 text-sm text-gray-600">
-          <span className="font-medium">Industry:</span> {job.industry}
+          <span className="font-medium">Industry:</span> {job.linkedin_org_industry}
         </div>
       )}
 
