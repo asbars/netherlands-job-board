@@ -2,6 +2,77 @@
 
 All notable changes to the Netherlands Job Board project.
 
+## [2024-01-05] - Migration to Railway.app
+
+### Changed - Deployment Platform
+
+**Migrated from Vercel to Railway.app** for hosting and deployment.
+
+#### Added
+
+- **Railway Configuration**
+  - `railway.json` - Railway-specific configuration
+  - `Procfile` - Process definition for Railway
+  - `RAILWAY_DEPLOYMENT.md` - Complete deployment guide for Railway
+  
+- **External Cron Setup**
+  - `.github/workflows/daily-cron.yml` - GitHub Actions cron workflow
+  - `.github/workflows/README.md` - Cron setup instructions
+  - Documentation for cron-job.org integration
+
+#### Updated
+
+- **README.md** - Updated deployment instructions for Railway
+- **QUICK_START.md** - Railway deployment steps
+- **IMPLEMENTATION_GUIDE.md** - Railway-specific cron configuration
+- All references to Vercel replaced with Railway
+
+#### Why Railway?
+
+- ✅ Excellent Next.js support
+- ✅ Simpler pricing model (pay-as-you-go)
+- ✅ Great developer experience
+- ✅ Custom domain support with free SSL
+- ✅ Easy rollbacks and environment management
+
+#### Cron Job Strategy
+
+Since Railway doesn't have built-in cron jobs, we support two free options:
+
+1. **GitHub Actions** (recommended for public repos)
+   - Configured in `.github/workflows/daily-cron.yml`
+   - Free for public repositories
+   - Runs daily at 5am UTC
+   
+2. **cron-job.org** (recommended for private repos)
+   - Free external cron service
+   - Setup instructions in `RAILWAY_DEPLOYMENT.md`
+
+#### Cost Comparison
+
+| Item | Vercel | Railway |
+|------|---------|---------|
+| Hosting | Free tier → $20/mo | $10-20/mo (usage-based) |
+| Cron Jobs | Built-in | External (free) |
+| Total | $0-20/mo | $10-20/mo |
+
+**Plus Apify**: $200/month (same on both platforms)
+
+#### Migration Guide
+
+For existing Vercel deployments:
+
+1. Code is fully compatible (no changes needed)
+2. Push to GitHub
+3. Connect Railway to your repository
+4. Add environment variables (same as Vercel)
+5. Set up external cron service
+6. Deploy!
+
+See `RAILWAY_DEPLOYMENT.md` for detailed instructions.
+
+---
+
 ## [2024-01-05] - Schema Update to Match Full Apify Output
 
 ### 🎉 Major Enhancement - Complete Apify Integration
