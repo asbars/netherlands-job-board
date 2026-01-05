@@ -216,20 +216,28 @@ curl -H "Authorization: Bearer your-cron-secret" \
   http://localhost:3000/api/cron/daily-sync
 ```
 
-### Step 3: Configure Vercel Cron
+### Step 3: Configure External Cron Service
 
-Create `vercel.json`:
+Since Railway doesn't have built-in cron, use an external service:
 
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron/daily-sync",
-      "schedule": "0 5 * * *"
-    }
-  ]
-}
-```
+#### Option A: cron-job.org (Free & Easy)
+
+1. Sign up at [cron-job.org](https://cron-job.org)
+2. Create new cron job:
+   - **URL**: `https://your-app.railway.app/api/cron/daily-sync`
+   - **Schedule**: `0 5 * * *` (5am daily)
+   - **Request Method**: GET
+   - **Headers**: Add `Authorization: Bearer your-cron-secret`
+
+#### Option B: GitHub Actions (Free for public repos)
+
+The project includes `.github/workflows/daily-cron.yml`:
+
+1. Add secrets to GitHub repository:
+   - `CRON_SECRET`: Your cron secret
+   - `APP_URL`: Your Railway app URL
+2. Enable GitHub Actions in your repo
+3. It will run automatically at 5am daily
 
 ## Phase 3: Monthly Cleanup (Optional)
 
@@ -302,22 +310,14 @@ export async function GET(request: NextRequest) {
 }
 ```
 
-Add to `vercel.json`:
+Add another cron job to your external service:
 
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron/daily-sync",
-      "schedule": "0 5 * * *"
-    },
-    {
-      "path": "/api/cron/monthly-cleanup",
-      "schedule": "0 3 1 * *"
-    }
-  ]
-}
-```
+**cron-job.org**:
+- URL: `https://your-app.railway.app/api/cron/monthly-cleanup`
+- Schedule: `0 3 1 * *` (3am on 1st of month)
+
+**GitHub Actions**:
+Already configured in `.github/workflows/daily-cron.yml`
 
 ## Phase 4: User Notifications (Future)
 
