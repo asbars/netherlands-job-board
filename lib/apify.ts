@@ -79,7 +79,7 @@ export async function fetchNewJobsFromAPI(config: ApifyRunConfig = {}): Promise<
     
     console.log(`Fetched ${items.length} new jobs from Apify API`);
     
-    return items;
+    return items as unknown as ApifyJobData[];
   } catch (error) {
     console.error('Error fetching new jobs from Apify API:', error);
     throw error;
@@ -134,7 +134,7 @@ export async function fetchAllJobsFromFeed(config: ApifyRunConfig = {}): Promise
     
     console.log(`Fetched ${items.length} jobs from Apify Feed`);
     
-    return items;
+    return items as unknown as ApifyJobData[];
   } catch (error) {
     console.error('Error fetching jobs from Apify Feed:', error);
     throw error;

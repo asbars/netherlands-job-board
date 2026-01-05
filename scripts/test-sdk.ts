@@ -77,10 +77,12 @@ async function testSDK() {
   const actorId = 'fantastic-jobs~career-site-job-listing-api';
   try {
     const actor = await client.actor(actorId).get();
-    console.log('✅ Actor is accessible!');
-    console.log(`   Name: ${actor.name}`);
-    console.log(`   Description: ${actor.description?.substring(0, 100)}...`);
-    console.log('   \n🎉 You\'re all set to run the populate script!\n');
+    if (actor) {
+      console.log('✅ Actor is accessible!');
+      console.log(`   Name: ${actor.name}`);
+      console.log(`   Description: ${actor.description?.substring(0, 100)}...`);
+      console.log('   \n🎉 You\'re all set to run the populate script!\n');
+    }
   } catch (error: any) {
     if (error.statusCode === 404 || error.message?.includes('not found')) {
       console.log('❌ Actor not accessible (404)');

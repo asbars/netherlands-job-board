@@ -1,12 +1,19 @@
+/**
+ * Job List Component
+ * Displays filtered job listings using the Metabase-style filter engine
+ */
+
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Job, FilterState } from '@/types/job';
+import { Job } from '@/types/job';
+import { FilterCondition } from '@/types/filters';
 import { fetchJobs } from '@/lib/supabase';
+import { applyFilters } from '@/lib/filterEngine';
 import JobCard from './JobCard';
 
 interface JobListProps {
-  filters: FilterState;
+  filters: FilterCondition[];
 }
 
 export default function JobList({ filters }: JobListProps) {
@@ -32,41 +39,14 @@ export default function JobList({ filters }: JobListProps) {
     loadJobs();
   }, []);
 
-  const filteredJobs = jobs.filter((job) => {
-    const titleMatch = !filters.title || 
-      job.title.toLowerCase().includes(filters.title.toLowerCase());
-    
-    const organizationMatch = !filters.organization || 
-      job.organization.toLowerCase().includes(filters.organization.toLowerCase());
-    
-    // Check if job's cities match the filter (using cities_derived array)
-    const cityMatch = !filters.city || 
-      (job.cities_derived && JSON.stringify(job.cities_derived).toLowerCase().includes(filters.city.toLowerCase()));
-    
-    // Check employment type (job.employment_type is an array)
-    const jobTypeMatch = !filters.employment_type || 
-      (job.employment_type && job.employment_type.includes(filters.employment_type));
-    
-    // Check AI experience level
-    const experienceMatch = !filters.experience_level || 
-      job.ai_experience_level === filters.experience_level;
-    
-    // Check remote (using remote_derived boolean)
-    const remoteMatch = filters.remote_only === null || 
-      job.remote_derived === filters.remote_only;
-    
-    const descriptionMatch = !filters.description || 
-      (job.description_html && job.description_html.toLowerCase().includes(filters.description.toLowerCase()));
-
-    return titleMatch && organizationMatch && cityMatch && 
-           jobTypeMatch && experienceMatch && remoteMatch && descriptionMatch;
-  });
+  // Apply filters using the filter engine
+  const filteredJobs = applyFilters(jobs, filters);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
           <p className="text-gray-600">Loading jobs...</p>
         </div>
       </div>
@@ -76,20 +56,41 @@ export default function JobList({ filters }: JobListProps) {
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+        <svg className="w-12 h-12 text-red-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
         <p className="text-red-800 font-medium mb-2">Error Loading Jobs</p>
         <p className="text-red-600 text-sm">{error}</p>
       </div>
     );
   }
 
-  if (filteredJobs.length === 0) {
+  if (filteredJobs.length === 0 && jobs.length === 0) {
     return (
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-12 text-center">
-        <p className="text-gray-600 text-lg font-medium mb-2">No jobs found</p>
+        <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+        <p className="text-gray-700 text-lg font-medium mb-2">No jobs yet</p>
         <p className="text-gray-500 text-sm">
-          {jobs.length === 0 
-            ? 'There are no jobs in the database yet. Check back soon!' 
-            : 'Try adjusting your filters to see more results.'}
+          The database is empty. Run the populate script to add jobs.
+        </p>
+      </div>
+    );
+  }
+
+  if (filteredJobs.length === 0) {
+    return (
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-12 text-center">
+        <svg className="w-16 h-16 text-amber-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+        </svg>
+        <p className="text-amber-900 text-lg font-medium mb-2">No matching jobs</p>
+        <p className="text-amber-700 text-sm mb-4">
+          {jobs.length} {jobs.length === 1 ? 'job' : 'jobs'} available, but none match your filters.
+        </p>
+        <p className="text-amber-600 text-xs">
+          Try removing or adjusting some filters
         </p>
       </div>
     );
@@ -97,12 +98,24 @@ export default function JobList({ filters }: JobListProps) {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <p className="text-sm text-gray-600">
-          Showing <span className="font-semibold">{filteredJobs.length}</span> {filteredJobs.length === 1 ? 'job' : 'jobs'}
-          {jobs.length !== filteredJobs.length && <span> (filtered from {jobs.length} total)</span>}
-        </p>
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">
+            {filteredJobs.length === jobs.length ? 'All Jobs' : 'Filtered Results'}
+          </h2>
+          <div className="text-sm text-gray-500">
+            {filteredJobs.length.toLocaleString()} {filteredJobs.length === 1 ? 'job' : 'jobs'}
+          </div>
+        </div>
+        
+        {filteredJobs.length < jobs.length && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-sm text-blue-700">
+            <span className="font-medium">{filteredJobs.length}</span> of{' '}
+            <span className="font-medium">{jobs.length}</span> jobs match your filters
+          </div>
+        )}
       </div>
+
       <div className="space-y-4">
         {filteredJobs.map((job) => (
           <JobCard key={job.id} job={job} />
@@ -111,4 +124,3 @@ export default function JobList({ filters }: JobListProps) {
     </div>
   );
 }
-
