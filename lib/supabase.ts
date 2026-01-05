@@ -14,7 +14,7 @@ export async function fetchJobs(): Promise<Job[]> {
   console.log('Fetching jobs from Supabase...');
   
   const { data, error } = await supabase
-    .from('jobs')
+    .from('jobmarket_jobs')
     .select('*')
     .eq('status', 'active')
     .order('first_seen_date', { ascending: false });
@@ -30,7 +30,7 @@ export async function fetchJobs(): Promise<Job[]> {
 
 export async function fetchJobById(id: number): Promise<Job | null> {
   const { data, error } = await supabase
-    .from('jobs')
+    .from('jobmarket_jobs')
     .select('*')
     .eq('id', id)
     .single();
@@ -44,7 +44,7 @@ export async function fetchJobById(id: number): Promise<Job | null> {
 }
 
 export async function incrementJobViewCount(id: number): Promise<void> {
-  const { error } = await supabase.rpc('increment_view_count', { job_id: id });
+  const { error } = await supabase.rpc('jobmarket_increment_view_count', { job_id: id });
   
   if (error) {
     console.error('Error incrementing view count:', error);

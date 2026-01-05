@@ -1,17 +1,20 @@
 -- Netherlands Job Board Database Schema
 -- Optimized for Apify Career Site Job Listing API/Feed
 -- Run this in your Supabase SQL Editor
+--
+-- NOTE: All tables are prefixed with "jobmarket_" to allow
+-- coexistence with other projects in the same Supabase database
 
 -- Drop existing tables if recreating (uncomment if needed)
--- DROP TABLE IF EXISTS jobs CASCADE;
--- DROP TABLE IF EXISTS user_job_alerts CASCADE;
--- DROP TABLE IF EXISTS apify_usage_logs CASCADE;
+-- DROP TABLE IF EXISTS jobmarket_jobs CASCADE;
+-- DROP TABLE IF EXISTS jobmarket_user_job_alerts CASCADE;
+-- DROP TABLE IF EXISTS jobmarket_apify_usage_logs CASCADE;
 
 -- ============================================
 -- MAIN JOBS TABLE
 -- ============================================
 
-CREATE TABLE jobs (
+CREATE TABLE jobmarket_jobs (
   -- Internal ID
   id BIGSERIAL PRIMARY KEY,
   
@@ -140,45 +143,45 @@ CREATE TABLE jobs (
 -- ============================================
 
 -- Core indexes
-CREATE INDEX idx_jobs_external_id ON jobs(external_id);
-CREATE INDEX idx_jobs_status ON jobs(status);
-CREATE INDEX idx_jobs_date_posted ON jobs(date_posted DESC NULLS LAST);
-CREATE INDEX idx_jobs_date_created ON jobs(date_created DESC NULLS LAST);
-CREATE INDEX idx_jobs_first_seen_date ON jobs(first_seen_date DESC);
+CREATE INDEX idx_jobmarket_jobs_external_id ON jobmarket_jobs(external_id);
+CREATE INDEX idx_jobmarket_jobs_status ON jobmarket_jobs(status);
+CREATE INDEX idx_jobmarket_jobs_date_posted ON jobmarket_jobs(date_posted DESC NULLS LAST);
+CREATE INDEX idx_jobmarket_jobs_date_created ON jobmarket_jobs(date_created DESC NULLS LAST);
+CREATE INDEX idx_jobmarket_jobs_first_seen_date ON jobmarket_jobs(first_seen_date DESC);
 
 -- Search indexes
-CREATE INDEX idx_jobs_organization ON jobs(organization);
-CREATE INDEX idx_jobs_source ON jobs(source);
-CREATE INDEX idx_jobs_source_domain ON jobs(source_domain);
+CREATE INDEX idx_jobmarket_jobs_organization ON jobmarket_jobs(organization);
+CREATE INDEX idx_jobmarket_jobs_source ON jobmarket_jobs(source);
+CREATE INDEX idx_jobmarket_jobs_source_domain ON jobmarket_jobs(source_domain);
 
 -- Location indexes
-CREATE INDEX idx_jobs_location_type ON jobs(location_type);
-CREATE INDEX idx_jobs_remote_derived ON jobs(remote_derived);
-CREATE INDEX idx_jobs_countries_derived ON jobs USING gin(countries_derived);
-CREATE INDEX idx_jobs_cities_derived ON jobs USING gin(cities_derived);
+CREATE INDEX idx_jobmarket_jobs_location_type ON jobmarket_jobs(location_type);
+CREATE INDEX idx_jobmarket_jobs_remote_derived ON jobmarket_jobs(remote_derived);
+CREATE INDEX idx_jobmarket_jobs_countries_derived ON jobmarket_jobs USING gin(countries_derived);
+CREATE INDEX idx_jobmarket_jobs_cities_derived ON jobmarket_jobs USING gin(cities_derived);
 
 -- Employment indexes
-CREATE INDEX idx_jobs_employment_type ON jobs USING gin(employment_type);
-CREATE INDEX idx_jobs_ai_experience_level ON jobs(ai_experience_level);
-CREATE INDEX idx_jobs_ai_work_arrangement ON jobs(ai_work_arrangement);
+CREATE INDEX idx_jobmarket_jobs_employment_type ON jobmarket_jobs USING gin(employment_type);
+CREATE INDEX idx_jobmarket_jobs_ai_experience_level ON jobmarket_jobs(ai_experience_level);
+CREATE INDEX idx_jobmarket_jobs_ai_work_arrangement ON jobmarket_jobs(ai_work_arrangement);
 
 -- Skills and keywords indexes
-CREATE INDEX idx_jobs_ai_key_skills ON jobs USING gin(ai_key_skills);
-CREATE INDEX idx_jobs_ai_keywords ON jobs USING gin(ai_keywords);
+CREATE INDEX idx_jobmarket_jobs_ai_key_skills ON jobmarket_jobs USING gin(ai_key_skills);
+CREATE INDEX idx_jobmarket_jobs_ai_keywords ON jobmarket_jobs USING gin(ai_keywords);
 
 -- Full text search indexes
-CREATE INDEX idx_jobs_title_search ON jobs USING gin(to_tsvector('english', title));
-CREATE INDEX idx_jobs_description_text_search ON jobs USING gin(to_tsvector('english', COALESCE(description_text, '')));
+CREATE INDEX idx_jobmarket_jobs_title_search ON jobmarket_jobs USING gin(to_tsvector('english', title));
+CREATE INDEX idx_jobmarket_jobs_description_text_search ON jobmarket_jobs USING gin(to_tsvector('english', COALESCE(description_text, '')));
 
 -- Company indexes
-CREATE INDEX idx_jobs_linkedin_org_slug ON jobs(linkedin_org_slug);
-CREATE INDEX idx_jobs_linkedin_org_industry ON jobs(linkedin_org_industry);
+CREATE INDEX idx_jobmarket_jobs_linkedin_org_slug ON jobmarket_jobs(linkedin_org_slug);
+CREATE INDEX idx_jobmarket_jobs_linkedin_org_industry ON jobmarket_jobs(linkedin_org_industry);
 
 -- ============================================
 -- USER JOB ALERTS TABLE
 -- ============================================
 
-CREATE TABLE user_job_alerts (
+CREATE TABLE jobmarket_user_job_alerts (
   id BIGSERIAL PRIMARY KEY,
   user_id TEXT NOT NULL,
   email TEXT NOT NULL,
@@ -204,16 +207,16 @@ CREATE TABLE user_job_alerts (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_user_job_alerts_user_id ON user_job_alerts(user_id);
-CREATE INDEX idx_user_job_alerts_email ON user_job_alerts(email);
-CREATE INDEX idx_user_job_alerts_is_active ON user_job_alerts(is_active);
-CREATE INDEX idx_user_job_alerts_frequency ON user_job_alerts(frequency);
+CREATE INDEX idx_jobmarket_user_job_alerts_user_id ON jobmarket_user_job_alerts(user_id);
+CREATE INDEX idx_jobmarket_user_job_alerts_email ON jobmarket_user_job_alerts(email);
+CREATE INDEX idx_jobmarket_user_job_alerts_is_active ON jobmarket_user_job_alerts(is_active);
+CREATE INDEX idx_jobmarket_user_job_alerts_frequency ON jobmarket_user_job_alerts(frequency);
 
 -- ============================================
 -- APIFY USAGE LOGS TABLE
 -- ============================================
 
-CREATE TABLE apify_usage_logs (
+CREATE TABLE jobmarket_apify_usage_logs (
   id BIGSERIAL PRIMARY KEY,
   date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   actor TEXT NOT NULL,
@@ -225,33 +228,33 @@ CREATE TABLE apify_usage_logs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_apify_usage_logs_date ON apify_usage_logs(date DESC);
-CREATE INDEX idx_apify_usage_logs_actor ON apify_usage_logs(actor);
-CREATE INDEX idx_apify_usage_logs_run_status ON apify_usage_logs(run_status);
+CREATE INDEX idx_jobmarket_apify_usage_logs_date ON jobmarket_apify_usage_logs(date DESC);
+CREATE INDEX idx_jobmarket_apify_usage_logs_actor ON jobmarket_apify_usage_logs(actor);
+CREATE INDEX idx_jobmarket_apify_usage_logs_run_status ON jobmarket_apify_usage_logs(run_status);
 
 -- ============================================
 -- ROW LEVEL SECURITY (RLS)
 -- ============================================
 
-ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_job_alerts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE apify_usage_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE jobmarket_jobs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE jobmarket_user_job_alerts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE jobmarket_apify_usage_logs ENABLE ROW LEVEL SECURITY;
 
 -- Public read access for jobs
-CREATE POLICY "Allow public read access to active jobs" ON jobs
+CREATE POLICY "Allow public read access to active jobs" ON jobmarket_jobs
   FOR SELECT
   USING (status = 'active');
 
 -- Users can only see their own alerts
-CREATE POLICY "Users can view their own alerts" ON user_job_alerts
+CREATE POLICY "Users can view their own alerts" ON jobmarket_user_job_alerts
   FOR SELECT
   USING (user_id = current_user);
 
-CREATE POLICY "Users can insert their own alerts" ON user_job_alerts
+CREATE POLICY "Users can insert their own alerts" ON jobmarket_user_job_alerts
   FOR INSERT
   WITH CHECK (user_id = current_user);
 
-CREATE POLICY "Users can update their own alerts" ON user_job_alerts
+CREATE POLICY "Users can update their own alerts" ON jobmarket_user_job_alerts
   FOR UPDATE
   USING (user_id = current_user);
 
@@ -260,17 +263,17 @@ CREATE POLICY "Users can update their own alerts" ON user_job_alerts
 -- ============================================
 
 -- Function to increment view count
-CREATE OR REPLACE FUNCTION increment_view_count(job_id BIGINT)
+CREATE OR REPLACE FUNCTION jobmarket_increment_view_count(job_id BIGINT)
 RETURNS void AS $$
 BEGIN
-  UPDATE jobs 
+  UPDATE jobmarket_jobs 
   SET view_count = view_count + 1
   WHERE id = job_id;
 END;
 $$ LANGUAGE plpgsql;
 
 -- Function to auto-update last_updated timestamp
-CREATE OR REPLACE FUNCTION update_modified_column()
+CREATE OR REPLACE FUNCTION jobmarket_update_modified_column()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.last_updated = NOW();
@@ -279,23 +282,23 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger for jobs table
-CREATE TRIGGER update_jobs_modtime
-BEFORE UPDATE ON jobs
+CREATE TRIGGER update_jobmarket_jobs_modtime
+BEFORE UPDATE ON jobmarket_jobs
 FOR EACH ROW
-EXECUTE FUNCTION update_modified_column();
+EXECUTE FUNCTION jobmarket_update_modified_column();
 
 -- Trigger for user_job_alerts table
-CREATE TRIGGER update_alerts_modtime
-BEFORE UPDATE ON user_job_alerts
+CREATE TRIGGER update_jobmarket_alerts_modtime
+BEFORE UPDATE ON jobmarket_user_job_alerts
 FOR EACH ROW
-EXECUTE FUNCTION update_modified_column();
+EXECUTE FUNCTION jobmarket_update_modified_column();
 
 -- ============================================
 -- USEFUL VIEWS
 -- ============================================
 
 -- Active jobs with calculated metrics
-CREATE VIEW active_jobs_with_metrics AS
+CREATE VIEW jobmarket_active_jobs_with_metrics AS
 SELECT 
   j.*,
   EXTRACT(EPOCH FROM (NOW() - j.date_posted))/86400 AS days_since_posted,
@@ -305,12 +308,12 @@ SELECT
     WHEN j.ai_work_arrangement IS NOT NULL THEN j.ai_work_arrangement
     ELSE 'On-site'
   END AS work_type
-FROM jobs j
+FROM jobmarket_jobs j
 WHERE j.status = 'active'
 ORDER BY j.date_posted DESC NULLS LAST;
 
 -- Jobs expiring soon (if expiration date is set)
-CREATE VIEW jobs_expiring_soon AS
+CREATE VIEW jobmarket_jobs_expiring_soon AS
 SELECT 
   id,
   external_id,
@@ -318,7 +321,7 @@ SELECT
   organization,
   date_validthrough,
   EXTRACT(EPOCH FROM (date_validthrough - NOW()))/86400 AS days_until_expiration
-FROM jobs
+FROM jobmarket_jobs
 WHERE status = 'active'
   AND date_validthrough IS NOT NULL
   AND date_validthrough > NOW()
@@ -326,7 +329,7 @@ WHERE status = 'active'
 ORDER BY date_validthrough ASC;
 
 -- Monthly cost summary
-CREATE VIEW monthly_cost_summary AS
+CREATE VIEW jobmarket_monthly_cost_summary AS
 SELECT 
   DATE_TRUNC('month', date) as month,
   actor,
@@ -334,7 +337,7 @@ SELECT
   SUM(job_count) as total_jobs,
   SUM(cost) as total_cost,
   AVG(cost) as avg_cost_per_run
-FROM apify_usage_logs
+FROM jobmarket_apify_usage_logs
 WHERE date >= NOW() - INTERVAL '12 months'
 GROUP BY DATE_TRUNC('month', date), actor
 ORDER BY month DESC, actor;
@@ -344,23 +347,23 @@ ORDER BY month DESC, actor;
 -- ============================================
 
 -- Search remote jobs in Amsterdam with specific skills
--- SELECT * FROM jobs 
+-- SELECT * FROM jobmarket_jobs 
 -- WHERE status = 'active'
 --   AND remote_derived = true
---   AND 'Amsterdam' = ANY(cities_derived)
+--   AND 'Amsterdam' = ANY(SELECT jsonb_array_elements_text(cities_derived))
 --   AND ai_key_skills && ARRAY['Python', 'React']
 -- ORDER BY date_posted DESC;
 
 -- Find jobs with salary information
 -- SELECT title, organization, ai_salary_minvalue, ai_salary_maxvalue, ai_salary_currency
--- FROM jobs
+-- FROM jobmarket_jobs
 -- WHERE status = 'active' 
 --   AND ai_salary_minvalue IS NOT NULL
 -- ORDER BY ai_salary_minvalue DESC;
 
 -- Jobs by company size
 -- SELECT linkedin_org_size, COUNT(*) as job_count
--- FROM jobs
+-- FROM jobmarket_jobs
 -- WHERE status = 'active' AND linkedin_org_size IS NOT NULL
 -- GROUP BY linkedin_org_size
 -- ORDER BY job_count DESC;
@@ -370,7 +373,7 @@ ORDER BY month DESC, actor;
 -- ============================================
 
 /*
-INSERT INTO jobs (
+INSERT INTO jobmarket_jobs (
   external_id, title, organization, url, description_html,
   employment_type, remote_derived, data_source, status,
   date_posted, locations_derived, cities_derived, countries_derived,
