@@ -30,18 +30,22 @@ function matchesFilter(job: Job, filter: FilterCondition): boolean {
       if (!fieldValue) return false;
       if (Array.isArray(fieldValue)) {
         // For array fields, check if any element contains the value
-        return fieldValue.some((v) => 
-          String(v).toLowerCase().includes(String(filter.value).toLowerCase())
-        );
+        return fieldValue.some((v) => {
+          // Handle both string values and object values
+          const compareValue = typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v);
+          return compareValue.toLowerCase().includes(String(filter.value).toLowerCase());
+        });
       }
       return String(fieldValue).toLowerCase().includes(String(filter.value).toLowerCase());
 
     case 'not_contains':
       if (!fieldValue) return true;
       if (Array.isArray(fieldValue)) {
-        return !fieldValue.some((v) => 
-          String(v).toLowerCase().includes(String(filter.value).toLowerCase())
-        );
+        return !fieldValue.some((v) => {
+          // Handle both string values and object values
+          const compareValue = typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v);
+          return compareValue.toLowerCase().includes(String(filter.value).toLowerCase());
+        });
       }
       return !String(fieldValue).toLowerCase().includes(String(filter.value).toLowerCase());
 
@@ -56,7 +60,11 @@ function matchesFilter(job: Job, filter: FilterCondition): boolean {
       
       if (Array.isArray(fieldValue)) {
         // Field is array (e.g., cities_derived), check if any match
-        return fieldValue.some((v) => filter.value.includes(v));
+        return fieldValue.some((v) => {
+          // Handle both string values and object values (e.g., {city: "Amsterdam", ...})
+          const compareValue = typeof v === 'object' && v !== null && 'city' in v ? v.city : v;
+          return filter.value.includes(compareValue);
+        });
       }
       // Field is single value, check if it's in filter values
       return filter.value.includes(fieldValue);
@@ -65,7 +73,11 @@ function matchesFilter(job: Job, filter: FilterCondition): boolean {
       if (!Array.isArray(filter.value) || filter.value.length === 0) return true;
       
       if (Array.isArray(fieldValue)) {
-        return !fieldValue.some((v) => filter.value.includes(v));
+        return !fieldValue.some((v) => {
+          // Handle both string values and object values (e.g., {city: "Amsterdam", ...})
+          const compareValue = typeof v === 'object' && v !== null && 'city' in v ? v.city : v;
+          return filter.value.includes(compareValue);
+        });
       }
       return !filter.value.includes(fieldValue);
 
