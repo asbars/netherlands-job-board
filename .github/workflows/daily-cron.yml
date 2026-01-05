@@ -1,9 +1,10 @@
 name: Daily Job Sync Cron
 
 on:
-  schedule:
-    # Run at 5:00 AM UTC every day
-    - cron: '0 5 * * *'
+  # DISABLED: Uncomment the schedule block below to enable automatic cron jobs
+  # schedule:
+  #   # Run at 5:00 AM UTC every day
+  #   - cron: '0 5 * * *'
   workflow_dispatch: # Allow manual trigger from Actions tab
 
 jobs:
@@ -32,8 +33,8 @@ jobs:
 
   monthly-cleanup:
     runs-on: ubuntu-latest
-    # Only run on the 1st of each month
-    if: github.event.schedule == '0 3 1 * *'
+    # DISABLED: Monthly cleanup is disabled until you enable the schedule above
+    if: false
     steps:
       - name: Call monthly cleanup endpoint
         run: |
