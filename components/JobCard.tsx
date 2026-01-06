@@ -44,7 +44,7 @@ export default function JobCard({ job }: JobCardProps) {
             )}
             {job.ai_experience_level && (
               <span className="px-2 py-1 bg-green-100 text-green-700 rounded-md">
-                {formatExperienceLevel(job.ai_experience_level)}
+                Experience: {job.ai_experience_level} {job.ai_experience_level.includes('+') ? 'years' : job.ai_experience_level.includes('-') ? 'years' : ''}
               </span>
             )}
             {job.remote_derived && (
