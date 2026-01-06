@@ -2,6 +2,13 @@
 
 import { useState } from 'react';
 import { Job } from '@/types/job';
+import {
+  formatEmploymentType,
+  formatExperienceLevel,
+  formatRelativeDate,
+  formatSalaryRange,
+  formatBoolean,
+} from '@/lib/formatters';
 
 interface JobCardProps {
   job: Job;
@@ -9,19 +16,6 @@ interface JobCardProps {
 
 export default function JobCard({ job }: JobCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-    return date.toLocaleDateString();
-  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
@@ -45,12 +39,12 @@ export default function JobCard({ job }: JobCardProps) {
             )}
             {job.employment_type && job.employment_type.length > 0 && (
               <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-md">
-                {job.employment_type[0]}
+                {formatEmploymentType(job.employment_type[0])}
               </span>
             )}
             {job.ai_experience_level && (
               <span className="px-2 py-1 bg-green-100 text-green-700 rounded-md">
-                {job.ai_experience_level}
+                {formatExperienceLevel(job.ai_experience_level)}
               </span>
             )}
             {job.remote_derived && (
@@ -61,18 +55,19 @@ export default function JobCard({ job }: JobCardProps) {
           </div>
         </div>
         <div className="text-right text-sm text-gray-500 ml-4">
-          {formatDate(job.first_seen_date)}
+          {formatRelativeDate(job.first_seen_date)}
         </div>
       </div>
 
       {(job.ai_salary_minvalue || job.ai_salary_value) && (
         <div className="mb-4 text-sm font-semibold text-green-600">
-          {job.ai_salary_minvalue && job.ai_salary_maxvalue 
-            ? `${job.ai_salary_currency || '€'}${job.ai_salary_minvalue.toLocaleString()} - ${job.ai_salary_currency || '€'}${job.ai_salary_maxvalue.toLocaleString()} ${job.ai_salary_unittext || ''}`
-            : job.ai_salary_value 
-            ? `${job.ai_salary_currency || '€'}${job.ai_salary_value.toLocaleString()} ${job.ai_salary_unittext || ''}`
-            : null
-          }
+          {formatSalaryRange(
+            job.ai_salary_minvalue,
+            job.ai_salary_maxvalue,
+            job.ai_salary_value,
+            job.ai_salary_currency,
+            job.ai_salary_unittext
+          )}
         </div>
       )}
 

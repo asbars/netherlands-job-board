@@ -4,6 +4,7 @@
  */
 
 import { Job } from '@/types/job';
+import { formatEmploymentType, formatExperienceLevel, formatWorkArrangement } from './formatters';
 
 export interface DynamicOptions {
   cities: { value: string; label: string }[];
@@ -87,7 +88,7 @@ export function generateDynamicOptions(jobs: Job[]): DynamicOptions {
   const employmentTypeValues = extractUniqueArrayValues(jobs, job => job.employment_type);
   const employmentTypes = employmentTypeValues.map(type => ({
     value: type,
-    label: type,
+    label: formatEmploymentType(type),
   }));
 
   // Extract experience levels from ai_experience_level
@@ -101,7 +102,7 @@ export function generateDynamicOptions(jobs: Job[]): DynamicOptions {
   const workArrangementValues = extractUniqueValues(jobs, job => job.ai_work_arrangement);
   const workArrangements = workArrangementValues.map(arrangement => ({
     value: arrangement,
-    label: arrangement,
+    label: formatWorkArrangement(arrangement),
   }));
 
   // Extract sources
@@ -178,7 +179,7 @@ export function generateDynamicOptions(jobs: Job[]): DynamicOptions {
   const aiEmploymentTypeValues = extractUniqueArrayValues(jobs, job => job.ai_employment_type);
   const aiEmploymentTypes = aiEmploymentTypeValues.map(type => ({
     value: type,
-    label: type,
+    label: formatEmploymentType(type),
   }));
 
   return {
@@ -201,18 +202,6 @@ export function generateDynamicOptions(jobs: Job[]): DynamicOptions {
   };
 }
 
-/**
- * Format experience level for display
- */
-function formatExperienceLevel(level: string): string {
-  const mapping: Record<string, string> = {
-    '0-2': '0-2 years (Entry Level)',
-    '2-5': '2-5 years (Mid Level)',
-    '5-10': '5-10 years (Senior)',
-    '10+': '10+ years (Expert)',
-  };
-  return mapping[level] || level;
-}
 
 /**
  * Get empty options structure
