@@ -1,6 +1,6 @@
 /**
  * Home Page - Netherlands Job Board
- * Features Metabase-style advanced filtering
+ * Features Metabase-style advanced filtering with URL persistence
  */
 
 'use client';
@@ -12,12 +12,30 @@ import JobList from '@/components/JobList';
 import { fetchJobs } from '@/lib/supabase';
 import { applyFilters } from '@/lib/filterEngine';
 import { generateDynamicOptions, DynamicOptions, getEmptyOptions } from '@/lib/dynamicFilterOptions';
+import { getFiltersFromUrl, updateUrlWithFilters } from '@/lib/filterUrl';
 
 export default function Home() {
   const [filters, setFilters] = useState<FilterCondition[]>([]);
   const [totalJobs, setTotalJobs] = useState(0);
   const [filteredCount, setFilteredCount] = useState(0);
   const [dynamicOptions, setDynamicOptions] = useState<DynamicOptions>(getEmptyOptions());
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load filters from URL on mount (only once)
+  useEffect(() => {
+    const urlFilters = getFiltersFromUrl();
+    if (urlFilters.length > 0) {
+      setFilters(urlFilters);
+    }
+    setIsInitialized(true);
+  }, []);
+
+  // Update URL when filters change (after initialization)
+  useEffect(() => {
+    if (isInitialized) {
+      updateUrlWithFilters(filters);
+    }
+  }, [filters, isInitialized]);
 
   // Load jobs and generate dynamic filter options
   useEffect(() => {
