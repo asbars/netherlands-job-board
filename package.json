@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "populate": "tsx scripts/populate-with-sdk.ts",
+    "populate:feed": "tsx scripts/populate-from-feed.ts",
     "test-apify": "tsx scripts/test-sdk.ts"
   },
   "overrides": {
