@@ -68,23 +68,34 @@ export default function JobCard({ job }: JobCardProps) {
       {(job.ai_salary_minvalue || job.ai_salary_value) && (
         <div className="mb-4 text-sm font-semibold text-green-600">
           {job.ai_salary_minvalue && job.ai_salary_maxvalue 
-            ? `€${job.ai_salary_minvalue.toLocaleString()} - €${job.ai_salary_maxvalue.toLocaleString()} ${job.ai_salary_unittext || ''}`
+            ? `${job.ai_salary_currency || '€'}${job.ai_salary_minvalue.toLocaleString()} - ${job.ai_salary_currency || '€'}${job.ai_salary_maxvalue.toLocaleString()} ${job.ai_salary_unittext || ''}`
             : job.ai_salary_value 
-            ? `€${job.ai_salary_value.toLocaleString()} ${job.ai_salary_unittext || ''}`
+            ? `${job.ai_salary_currency || '€'}${job.ai_salary_value.toLocaleString()} ${job.ai_salary_unittext || ''}`
             : null
           }
         </div>
       )}
 
-      {job.description_html && (
+      {/* AI-Generated Description */}
+      {(job.ai_core_responsibilities || job.ai_requirements_summary) && (
         <div className="mb-4">
           <div 
-            className={`prose prose-sm max-w-none text-gray-700 overflow-hidden transition-all duration-300 ${
+            className={`text-gray-700 text-sm space-y-2 overflow-hidden transition-all duration-300 ${
               isExpanded ? 'max-h-none' : 'max-h-[4.5rem]'
             }`}
-            dangerouslySetInnerHTML={{ __html: job.description_html }}
-          />
-          {job.description_html.length > 200 && (
+          >
+            {job.ai_core_responsibilities && (
+              <p>
+                <span className="font-medium text-gray-900">Core Responsibilities:</span> {job.ai_core_responsibilities}
+              </p>
+            )}
+            {job.ai_requirements_summary && (
+              <p>
+                <span className="font-medium text-gray-900">Requirements:</span> {job.ai_requirements_summary}
+              </p>
+            )}
+          </div>
+          {((job.ai_core_responsibilities?.length || 0) + (job.ai_requirements_summary?.length || 0)) > 200 && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
               className="mt-2 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
@@ -92,6 +103,35 @@ export default function JobCard({ job }: JobCardProps) {
               {isExpanded ? 'Show less' : 'Show more'}
             </button>
           )}
+        </div>
+      )}
+
+      {/* Additional Job Info */}
+      {job.ai_key_skills && job.ai_key_skills.length > 0 && (
+        <div className="mb-3">
+          <p className="text-xs font-medium text-gray-700 mb-1">Key Skills:</p>
+          <div className="flex flex-wrap gap-1">
+            {job.ai_key_skills.slice(0, isExpanded ? undefined : 8).map((skill, idx) => (
+              <span 
+                key={idx}
+                className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded"
+              >
+                {skill}
+              </span>
+            ))}
+            {!isExpanded && job.ai_key_skills.length > 8 && (
+              <span className="px-2 py-0.5 text-gray-500 text-xs">
+                +{job.ai_key_skills.length - 8} more
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {job.ai_benefits && job.ai_benefits.length > 0 && (
+        <div className="mb-3 text-sm text-gray-600">
+          <span className="font-medium">Benefits:</span> {job.ai_benefits.slice(0, 3).join(', ')}
+          {job.ai_benefits.length > 3 && ` +${job.ai_benefits.length - 3} more`}
         </div>
       )}
 

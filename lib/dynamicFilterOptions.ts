@@ -7,11 +7,21 @@ import { Job } from '@/types/job';
 
 export interface DynamicOptions {
   cities: { value: string; label: string }[];
+  regions: { value: string; label: string }[];
   employmentTypes: { value: string; label: string }[];
   experienceLevels: { value: string; label: string }[];
   workArrangements: { value: string; label: string }[];
   sources: { value: string; label: string }[];
   industries: { value: string; label: string }[];
+  domains: { value: string; label: string }[];
+  salaryCurrencies: { value: string; label: string }[];
+  salaryUnits: { value: string; label: string }[];
+  languages: { value: string; label: string }[];
+  skills: { value: string; label: string }[];
+  keywords: { value: string; label: string }[];
+  taxonomies: { value: string; label: string }[];
+  benefits: { value: string; label: string }[];
+  aiEmploymentTypes: { value: string; label: string }[];
 }
 
 /**
@@ -66,6 +76,13 @@ export function generateDynamicOptions(jobs: Job[]): DynamicOptions {
     label: city,
   }));
 
+  // Extract regions from regions_derived array
+  const regionValues = extractUniqueArrayValues(jobs, job => job.regions_derived);
+  const regions = regionValues.map(region => ({
+    value: region,
+    label: region,
+  }));
+
   // Extract employment types from employment_type array
   const employmentTypeValues = extractUniqueArrayValues(jobs, job => job.employment_type);
   const employmentTypes = employmentTypeValues.map(type => ({
@@ -101,13 +118,86 @@ export function generateDynamicOptions(jobs: Job[]): DynamicOptions {
     label: industry,
   }));
 
+  // Extract domains from domain_derived
+  const domainValues = extractUniqueValues(jobs, job => job.domain_derived);
+  const domains = domainValues.map(domain => ({
+    value: domain,
+    label: domain,
+  }));
+
+  // Extract salary currencies
+  const currencyValues = extractUniqueValues(jobs, job => job.ai_salary_currency);
+  const salaryCurrencies = currencyValues.map(currency => ({
+    value: currency,
+    label: currency,
+  }));
+
+  // Extract salary units
+  const unitValues = extractUniqueValues(jobs, job => job.ai_salary_unittext);
+  const salaryUnits = unitValues.map(unit => ({
+    value: unit,
+    label: unit,
+  }));
+
+  // Extract languages
+  const languageValues = extractUniqueValues(jobs, job => job.ai_job_language);
+  const languages = languageValues.map(lang => ({
+    value: lang,
+    label: lang,
+  }));
+
+  // Extract skills from ai_key_skills array
+  const skillValues = extractUniqueArrayValues(jobs, job => job.ai_key_skills);
+  const skills = skillValues.slice(0, 100).map(skill => ({ // Limit to top 100
+    value: skill,
+    label: skill,
+  }));
+
+  // Extract keywords from ai_keywords array
+  const keywordValues = extractUniqueArrayValues(jobs, job => job.ai_keywords);
+  const keywords = keywordValues.slice(0, 100).map(keyword => ({ // Limit to top 100
+    value: keyword,
+    label: keyword,
+  }));
+
+  // Extract taxonomies from ai_taxonomies_a array
+  const taxonomyValues = extractUniqueArrayValues(jobs, job => job.ai_taxonomies_a);
+  const taxonomies = taxonomyValues.map(taxonomy => ({
+    value: taxonomy,
+    label: taxonomy,
+  }));
+
+  // Extract benefits from ai_benefits array
+  const benefitValues = extractUniqueArrayValues(jobs, job => job.ai_benefits);
+  const benefits = benefitValues.map(benefit => ({
+    value: benefit,
+    label: benefit,
+  }));
+
+  // Extract AI employment types from ai_employment_type array
+  const aiEmploymentTypeValues = extractUniqueArrayValues(jobs, job => job.ai_employment_type);
+  const aiEmploymentTypes = aiEmploymentTypeValues.map(type => ({
+    value: type,
+    label: type,
+  }));
+
   return {
     cities,
+    regions,
     employmentTypes,
     experienceLevels,
     workArrangements,
     sources,
     industries,
+    domains,
+    salaryCurrencies,
+    salaryUnits,
+    languages,
+    skills,
+    keywords,
+    taxonomies,
+    benefits,
+    aiEmploymentTypes,
   };
 }
 
@@ -130,11 +220,21 @@ function formatExperienceLevel(level: string): string {
 export function getEmptyOptions(): DynamicOptions {
   return {
     cities: [],
+    regions: [],
     employmentTypes: [],
     experienceLevels: [],
     workArrangements: [],
     sources: [],
     industries: [],
+    domains: [],
+    salaryCurrencies: [],
+    salaryUnits: [],
+    languages: [],
+    skills: [],
+    keywords: [],
+    taxonomies: [],
+    benefits: [],
+    aiEmploymentTypes: [],
   };
 }
 
