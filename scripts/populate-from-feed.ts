@@ -29,7 +29,7 @@ const APIFY_API_TOKEN = process.env.APIFY_API_TOKEN || '';
 const CAREER_SITE_FEED_ACTOR_ID = 'fantastic-jobs~career-site-job-listing-feed';
 
 // Configuration
-const MAX_JOBS = 2000; // Get 2000 latest jobs
+const MAX_JOBS = 5000; // Get 5000 latest jobs
 const COST_PER_1000_JOBS = 2; // $2 per 1000 jobs for Feed
 
 // Validate environment variables
