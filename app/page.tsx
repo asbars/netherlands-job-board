@@ -16,6 +16,7 @@ import { getFiltersFromUrl, updateUrlWithFilters } from '@/lib/filterUrl';
 export default function Home() {
   const [filters, setFilters] = useState<FilterCondition[]>([]);
   const [totalJobs, setTotalJobs] = useState(0);
+  const [filteredCount, setFilteredCount] = useState(0);
   const [dynamicOptions, setDynamicOptions] = useState<DynamicOptions>(getEmptyOptions());
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -39,9 +40,10 @@ export default function Home() {
   useEffect(() => {
     async function loadInitialData() {
       try {
-        // Fetch total job count from database
+        // Fetch total job count from database (unfiltered)
         const count = await fetchJobsCount();
         setTotalJobs(count);
+        setFilteredCount(count);
 
         // Fetch sample of jobs to generate filter dropdown options
         const sampleJobs = await fetchJobsSample(1000);
@@ -54,6 +56,20 @@ export default function Home() {
 
     loadInitialData();
   }, []);
+
+  // Update filtered count when filters change
+  useEffect(() => {
+    async function updateFilteredCount() {
+      try {
+        const count = await fetchJobsCount(filters);
+        setFilteredCount(count);
+      } catch (error) {
+        console.error('Error fetching filtered count:', error);
+      }
+    }
+
+    updateFilteredCount();
+  }, [filters]);
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -75,7 +91,7 @@ export default function Home() {
               <MetabaseStyleFilters
                 filters={filters}
                 onFiltersChange={setFilters}
-                resultCount={totalJobs}
+                resultCount={filteredCount}
                 totalCount={totalJobs}
                 dynamicOptions={dynamicOptions}
               />

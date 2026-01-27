@@ -71,13 +71,13 @@ export default function JobList({ filters }: JobListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(DEFAULT_PAGE_SIZE);
 
-  // Fetch jobs when page changes
+  // Fetch jobs when page or filters change
   useEffect(() => {
     async function loadJobs() {
       try {
         setLoading(true);
         setError(null);
-        const result = await fetchJobsPaginated(currentPage, pageSize);
+        const result = await fetchJobsPaginated(currentPage, pageSize, filters);
         setJobs(result.jobs);
         setTotalCount(result.totalCount);
       } catch (err) {
@@ -89,7 +89,7 @@ export default function JobList({ filters }: JobListProps) {
     }
 
     loadJobs();
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, filters]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
