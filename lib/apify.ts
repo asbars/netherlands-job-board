@@ -111,9 +111,9 @@ export async function fetchAllJobsFromFeed(config: ApifyRunConfig = {}): Promise
   try {
     // Build the input object
     const input: Record<string, any> = {
-      maxItems: limit,
-      include_ai,
-      include_li,
+      limit,
+      includeAi: include_ai,
+      includeLinkedIn: include_li,
     };
 
     if (locationSearch && locationSearch.length > 0) {
