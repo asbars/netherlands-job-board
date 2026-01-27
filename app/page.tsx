@@ -9,13 +9,15 @@ import { useState, useEffect } from 'react';
 import { FilterCondition } from '@/types/filters';
 import MetabaseStyleFilters from '@/components/MetabaseStyleFilters';
 import JobList from '@/components/JobList';
-import { fetchJobsCount, fetchJobsSample } from '@/lib/supabase';
+import { fetchJobs } from '@/lib/supabase';
+import { applyFilters } from '@/lib/filterEngine';
 import { generateDynamicOptions, DynamicOptions, getEmptyOptions } from '@/lib/dynamicFilterOptions';
 import { getFiltersFromUrl, updateUrlWithFilters } from '@/lib/filterUrl';
 
 export default function Home() {
   const [filters, setFilters] = useState<FilterCondition[]>([]);
   const [totalJobs, setTotalJobs] = useState(0);
+  const [filteredCount, setFilteredCount] = useState(0);
   const [dynamicOptions, setDynamicOptions] = useState<DynamicOptions>(getEmptyOptions());
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -35,25 +37,27 @@ export default function Home() {
     }
   }, [filters, isInitialized]);
 
-  // Load total count and dynamic filter options on mount
+  // Load jobs and generate dynamic filter options
   useEffect(() => {
-    async function loadInitialData() {
+    async function loadJobsAndOptions() {
       try {
-        // Fetch total job count
-        const count = await fetchJobsCount();
-        setTotalJobs(count);
+        const jobs = await fetchJobs();
+        setTotalJobs(jobs.length);
 
-        // Fetch sample of jobs to generate filter dropdown options
-        const sampleJobs = await fetchJobsSample();
-        const options = generateDynamicOptions(sampleJobs);
+        // Generate dynamic options from actual job data
+        const options = generateDynamicOptions(jobs);
         setDynamicOptions(options);
+
+        // Calculate filtered count
+        const filtered = applyFilters(jobs, filters);
+        setFilteredCount(filtered.length);
       } catch (error) {
-        console.error('Error loading initial data:', error);
+        console.error('Error loading jobs:', error);
       }
     }
 
-    loadInitialData();
-  }, []);
+    loadJobsAndOptions();
+  }, [filters]);
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -75,7 +79,7 @@ export default function Home() {
               <MetabaseStyleFilters
                 filters={filters}
                 onFiltersChange={setFilters}
-                resultCount={totalJobs}
+                resultCount={filteredCount}
                 totalCount={totalJobs}
                 dynamicOptions={dynamicOptions}
               />
