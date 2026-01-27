@@ -41,9 +41,9 @@ export async function fetchNewJobsFromAPI(config: ApifyRunConfig = {}): Promise<
     // Build the input object (only include defined search parameters)
     const input: Record<string, any> = {
       timeframe,
-      maxItems: limit,
-      include_ai,
-      include_li,
+      limit,
+      includeAi: include_ai,
+      includeLinkedIn: include_li,
     };
     
     if (locationSearch && locationSearch.length > 0) {

@@ -14,7 +14,7 @@ import { createClient } from '@supabase/supabase-js';
 import { fetchAllJobsFromFeed } from '@/lib/apify';
 
 // Configuration
-const MAX_JOBS = 350; // Reduced for testing, increase to 5000 for production
+const MAX_JOBS = 5000;
 const COST_PER_1000_JOBS = 2;
 
 // Verify cron secret
