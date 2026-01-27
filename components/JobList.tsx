@@ -1,6 +1,6 @@
 /**
  * Job List Component
- * Displays filtered job listings using the Metabase-style filter engine
+ * Displays filtered job listings with pagination
  */
 
 'use client';
@@ -12,6 +12,8 @@ import { fetchJobs } from '@/lib/supabase';
 import { applyFilters } from '@/lib/filterEngine';
 import JobCard from './JobCard';
 
+const DEFAULT_PAGE_SIZE = 20;
+
 interface JobListProps {
   filters: FilterCondition[];
 }
@@ -20,6 +22,8 @@ export default function JobList({ filters }: JobListProps) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(DEFAULT_PAGE_SIZE);
 
   useEffect(() => {
     async function loadJobs() {
@@ -39,8 +43,19 @@ export default function JobList({ filters }: JobListProps) {
     loadJobs();
   }, []);
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
   // Apply filters using the filter engine
   const filteredJobs = applyFilters(jobs, filters);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredJobs.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedJobs = filteredJobs.slice(startIndex, endIndex);
 
   if (loading) {
     return (
@@ -117,10 +132,38 @@ export default function JobList({ filters }: JobListProps) {
       </div>
 
       <div className="space-y-4">
-        {filteredJobs.map((job) => (
+        {paginatedJobs.map((job) => (
           <JobCard key={job.id} job={job} />
         ))}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
+          <div className="text-sm text-gray-500">
+            Showing {startIndex + 1}-{Math.min(endIndex, filteredJobs.length)} of {filteredJobs.length.toLocaleString()}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <span className="text-sm text-gray-600">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
