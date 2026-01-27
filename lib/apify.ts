@@ -89,6 +89,8 @@ export async function fetchNewJobsFromAPI(config: ApifyRunConfig = {}): Promise<
 /**
  * Fetch all active jobs from Apify Career Site Job Listing Feed
  * Returns complete snapshot of all active jobs (last 6 months)
+ *
+ * Uses async approach: start run -> poll for completion -> fetch results
  */
 export async function fetchAllJobsFromFeed(config: ApifyRunConfig = {}): Promise<ApifyJobData[]> {
   const {
@@ -99,13 +101,13 @@ export async function fetchAllJobsFromFeed(config: ApifyRunConfig = {}): Promise
     include_li = true,
     memory = 1024, // 1GB memory in MB
   } = config;
-  
+
   console.log(`Fetching all active jobs from Apify Feed (location: ${locationSearch.join(', ')}, limit: ${limit}, memory: ${memory}MB)`);
-  
+
   if (!APIFY_API_TOKEN) {
     throw new Error('APIFY_API_TOKEN environment variable is not set');
   }
-  
+
   try {
     // Build the input object
     const input: Record<string, any> = {
@@ -113,30 +115,44 @@ export async function fetchAllJobsFromFeed(config: ApifyRunConfig = {}): Promise
       include_ai,
       include_li,
     };
-    
+
     if (locationSearch && locationSearch.length > 0) {
       input.locationSearch = locationSearch;
     }
     if (locationExclusionSearch && locationExclusionSearch.length > 0) {
       input.locationExclusionSearch = locationExclusionSearch;
     }
-    
-    // Start the actor run using SDK with memory allocation
-    const run = await apifyClient.actor(CAREER_SITE_FEED_ACTOR_ID).call(input, {
+
+    // Step 1: Start the actor run (async - returns immediately)
+    console.log('Starting actor run with input:', JSON.stringify(input));
+    const run = await apifyClient.actor(CAREER_SITE_FEED_ACTOR_ID).start(input, {
       memory,
     });
-    
-    console.log(`Feed run completed: ${run.id}, status: ${run.status}`);
-    
-    if (run.status !== 'SUCCEEDED') {
-      throw new Error(`Feed actor run failed with status: ${run.status}`);
+
+    console.log(`Actor run started: ${run.id}, status: ${run.status}, datasetId: ${run.defaultDatasetId}`);
+
+    // Step 2: Poll for completion
+    const runClient = apifyClient.run(run.id);
+    let runInfo = await runClient.get();
+
+    while (runInfo && !['SUCCEEDED', 'FAILED', 'ABORTED', 'TIMED-OUT'].includes(runInfo.status)) {
+      console.log(`Run ${run.id} status: ${runInfo.status}, waiting...`);
+      await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+      runInfo = await runClient.get();
     }
-    
-    // Fetch the results from the dataset
-    const { items } = await apifyClient.dataset(run.defaultDatasetId).listItems();
-    
+
+    if (!runInfo || runInfo.status !== 'SUCCEEDED') {
+      throw new Error(`Actor run failed with status: ${runInfo?.status || 'unknown'}`);
+    }
+
+    console.log(`Run completed: ${run.id}, status: ${runInfo.status}`);
+
+    // Step 3: Fetch results from dataset
+    const datasetClient = apifyClient.dataset(run.defaultDatasetId);
+    const { items } = await datasetClient.listItems();
+
     console.log(`Fetched ${items.length} jobs from Apify Feed`);
-    
+
     return items as unknown as ApifyJobData[];
   } catch (error) {
     console.error('Error fetching jobs from Apify Feed:', error);
