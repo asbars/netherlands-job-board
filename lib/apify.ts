@@ -91,15 +91,16 @@ export async function fetchNewJobsFromAPI(config: ApifyRunConfig = {}): Promise<
  * Returns complete snapshot of all active jobs (last 6 months)
  */
 export async function fetchAllJobsFromFeed(config: ApifyRunConfig = {}): Promise<ApifyJobData[]> {
-  const { 
-    locationSearch = ['Netherlands'], 
+  const {
+    locationSearch = ['Netherlands'],
     locationExclusionSearch,
-    limit = 20000,
+    limit = 5000,
     include_ai = true,
-    include_li = true 
+    include_li = true,
+    memoryMbytes = 1024, // 1GB memory
   } = config;
   
-  console.log(`Fetching all active jobs from Apify Feed (location: ${locationSearch.join(', ')})`);
+  console.log(`Fetching all active jobs from Apify Feed (location: ${locationSearch.join(', ')}, limit: ${limit}, memory: ${memoryMbytes}MB)`);
   
   if (!APIFY_API_TOKEN) {
     throw new Error('APIFY_API_TOKEN environment variable is not set');
@@ -120,8 +121,10 @@ export async function fetchAllJobsFromFeed(config: ApifyRunConfig = {}): Promise
       input.locationExclusionSearch = locationExclusionSearch;
     }
     
-    // Start the actor run using SDK
-    const run = await apifyClient.actor(CAREER_SITE_FEED_ACTOR_ID).call(input);
+    // Start the actor run using SDK with memory allocation
+    const run = await apifyClient.actor(CAREER_SITE_FEED_ACTOR_ID).call(input, {
+      memoryMbytes,
+    });
     
     console.log(`Feed run completed: ${run.id}, status: ${run.status}`);
     

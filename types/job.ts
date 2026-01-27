@@ -281,6 +281,7 @@ export interface ApifyRunConfig {
   limit?: number;
   include_ai?: boolean;
   include_li?: boolean;
+  memoryMbytes?: number; // Memory allocation for actor run (default: 1024 = 1GB)
 }
 
 // ============================================
