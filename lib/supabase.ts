@@ -10,22 +10,64 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export async function fetchJobs(): Promise<Job[]> {
-  console.log('Fetching jobs from Supabase...');
+/**
+ * Fetch total count of active jobs in database
+ */
+export async function fetchJobsCount(): Promise<number> {
+  const { count, error } = await supabase
+    .from('jobmarket_jobs')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'active');
 
+  if (error) {
+    console.error('Error fetching job count:', error);
+    throw error;
+  }
+
+  return count || 0;
+}
+
+/**
+ * Fetch paginated jobs from database
+ */
+export async function fetchJobsPaginated(page: number = 1, pageSize: number = 20): Promise<{ jobs: Job[]; totalCount: number }> {
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, error, count } = await supabase
+    .from('jobmarket_jobs')
+    .select('*', { count: 'exact' })
+    .eq('status', 'active')
+    .order('first_seen_date', { ascending: false })
+    .range(from, to);
+
+  if (error) {
+    console.error('Error fetching paginated jobs:', error);
+    throw error;
+  }
+
+  return {
+    jobs: data || [],
+    totalCount: count || 0,
+  };
+}
+
+/**
+ * Fetch a sample of jobs for generating filter options
+ */
+export async function fetchJobsSample(limit: number = 1000): Promise<Job[]> {
   const { data, error } = await supabase
     .from('jobmarket_jobs')
     .select('*')
     .eq('status', 'active')
     .order('first_seen_date', { ascending: false })
-    .range(0, 9999); // Override Supabase default limit of 1000
+    .limit(limit);
 
   if (error) {
-    console.error('Error fetching jobs:', error);
+    console.error('Error fetching job sample:', error);
     throw error;
   }
 
-  console.log('Fetched jobs count:', data?.length || 0);
   return data || [];
 }
 

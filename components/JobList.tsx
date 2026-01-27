@@ -1,6 +1,6 @@
 /**
  * Job List Component
- * Displays filtered job listings with pagination
+ * Displays job listings with server-side pagination
  */
 
 'use client';
@@ -8,8 +8,7 @@
 import { useEffect, useState } from 'react';
 import { Job } from '@/types/job';
 import { FilterCondition } from '@/types/filters';
-import { fetchJobs } from '@/lib/supabase';
-import { applyFilters } from '@/lib/filterEngine';
+import { fetchJobsPaginated } from '@/lib/supabase';
 import JobCard from './JobCard';
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -18,20 +17,69 @@ interface JobListProps {
   filters: FilterCondition[];
 }
 
+function PaginationControls({
+  currentPage,
+  totalPages,
+  totalCount,
+  pageSize,
+  onPageChange,
+}: {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+}) {
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalCount);
+
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex items-center justify-between border-t border-gray-200 py-4">
+      <div className="text-sm text-gray-500">
+        Showing {startIndex + 1}-{endIndex} of {totalCount.toLocaleString()}
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1}
+          className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Previous
+        </button>
+        <span className="text-sm text-gray-600">
+          Page {currentPage} of {totalPages.toLocaleString()}
+        </span>
+        <button
+          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function JobList({ filters }: JobListProps) {
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(DEFAULT_PAGE_SIZE);
 
+  // Fetch jobs when page changes
   useEffect(() => {
     async function loadJobs() {
       try {
         setLoading(true);
         setError(null);
-        const data = await fetchJobs();
-        setJobs(data);
+        const result = await fetchJobsPaginated(currentPage, pageSize);
+        setJobs(result.jobs);
+        setTotalCount(result.totalCount);
       } catch (err) {
         setError('Failed to load jobs. Please check your connection and try again.');
         console.error(err);
@@ -41,21 +89,20 @@ export default function JobList({ filters }: JobListProps) {
     }
 
     loadJobs();
-  }, []);
+  }, [currentPage, pageSize]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [filters]);
 
-  // Apply filters using the filter engine
-  const filteredJobs = applyFilters(jobs, filters);
+  const totalPages = Math.ceil(totalCount / pageSize);
 
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredJobs.length / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedJobs = filteredJobs.slice(startIndex, endIndex);
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to top of job list
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   if (loading) {
     return (
@@ -80,7 +127,7 @@ export default function JobList({ filters }: JobListProps) {
     );
   }
 
-  if (filteredJobs.length === 0 && jobs.length === 0) {
+  if (totalCount === 0) {
     return (
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-12 text-center">
         <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,76 +141,40 @@ export default function JobList({ filters }: JobListProps) {
     );
   }
 
-  if (filteredJobs.length === 0) {
-    return (
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-12 text-center">
-        <svg className="w-16 h-16 text-amber-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-        </svg>
-        <p className="text-amber-900 text-lg font-medium mb-2">No matching jobs</p>
-        <p className="text-amber-700 text-sm mb-4">
-          {jobs.length} {jobs.length === 1 ? 'job' : 'jobs'} available, but none match your filters.
-        </p>
-        <p className="text-amber-600 text-xs">
-          Try removing or adjusting some filters
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div>
       <div className="mb-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {filteredJobs.length === jobs.length ? 'All Jobs' : 'Filtered Results'}
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-900">All Jobs</h2>
           <div className="text-sm text-gray-500">
-            {filteredJobs.length.toLocaleString()} {filteredJobs.length === 1 ? 'job' : 'jobs'}
+            {totalCount.toLocaleString()} {totalCount === 1 ? 'job' : 'jobs'}
           </div>
         </div>
-
-        {filteredJobs.length < jobs.length && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-sm text-blue-700">
-            <span className="font-medium">{filteredJobs.length}</span> of{' '}
-            <span className="font-medium">{jobs.length}</span> jobs match your filters
-          </div>
-        )}
       </div>
 
-      <div className="space-y-4">
-        {paginatedJobs.map((job) => (
+      {/* Top Pagination */}
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalCount={totalCount}
+        pageSize={pageSize}
+        onPageChange={handlePageChange}
+      />
+
+      <div className="space-y-4 my-4">
+        {jobs.map((job) => (
           <JobCard key={job.id} job={job} />
         ))}
       </div>
 
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
-          <div className="text-sm text-gray-500">
-            Showing {startIndex + 1}-{Math.min(endIndex, filteredJobs.length)} of {filteredJobs.length.toLocaleString()}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            <span className="text-sm text-gray-600">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Bottom Pagination */}
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalCount={totalCount}
+        pageSize={pageSize}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 }
