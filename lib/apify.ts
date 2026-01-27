@@ -97,10 +97,10 @@ export async function fetchAllJobsFromFeed(config: ApifyRunConfig = {}): Promise
     limit = 5000,
     include_ai = true,
     include_li = true,
-    memoryMbytes = 1024, // 1GB memory
+    memory = 1024, // 1GB memory in MB
   } = config;
   
-  console.log(`Fetching all active jobs from Apify Feed (location: ${locationSearch.join(', ')}, limit: ${limit}, memory: ${memoryMbytes}MB)`);
+  console.log(`Fetching all active jobs from Apify Feed (location: ${locationSearch.join(', ')}, limit: ${limit}, memory: ${memory}MB)`);
   
   if (!APIFY_API_TOKEN) {
     throw new Error('APIFY_API_TOKEN environment variable is not set');
@@ -123,7 +123,7 @@ export async function fetchAllJobsFromFeed(config: ApifyRunConfig = {}): Promise
     
     // Start the actor run using SDK with memory allocation
     const run = await apifyClient.actor(CAREER_SITE_FEED_ACTOR_ID).call(input, {
-      memoryMbytes,
+      memory,
     });
     
     console.log(`Feed run completed: ${run.id}, status: ${run.status}`);
