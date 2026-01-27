@@ -28,13 +28,28 @@ export default function MetabaseStyleFilters({
   dynamicOptions,
 }: MetabaseStyleFiltersProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingFilter, setEditingFilter] = useState<FilterCondition | null>(null);
 
   const handleAddFilter = (filter: FilterCondition) => {
     onFiltersChange([...filters, filter]);
   };
 
+  const handleUpdateFilter = (updatedFilter: FilterCondition) => {
+    onFiltersChange(filters.map((f) => (f.id === updatedFilter.id ? updatedFilter : f)));
+  };
+
   const handleRemoveFilter = (id: string) => {
     onFiltersChange(filters.filter((f) => f.id !== id));
+  };
+
+  const handleEditFilter = (filter: FilterCondition) => {
+    setEditingFilter(filter);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingFilter(null);
   };
 
   const handleClearAll = () => {
@@ -70,6 +85,7 @@ export default function MetabaseStyleFilters({
                 key={filter.id}
                 filter={filter}
                 onRemove={() => handleRemoveFilter(filter.id)}
+                onEdit={() => handleEditFilter(filter)}
               />
             ))}
           </div>
@@ -111,11 +127,13 @@ export default function MetabaseStyleFilters({
         </div>
       </div>
 
-      {/* Add Filter Modal */}
+      {/* Add/Edit Filter Modal */}
       <AddFilterModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
         onAdd={handleAddFilter}
+        onUpdate={handleUpdateFilter}
+        editingFilter={editingFilter}
         dynamicOptions={dynamicOptions}
       />
     </div>

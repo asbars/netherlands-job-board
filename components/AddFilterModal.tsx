@@ -14,44 +14,61 @@ interface AddFilterModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (filter: FilterCondition) => void;
+  onUpdate?: (filter: FilterCondition) => void;
+  editingFilter?: FilterCondition | null;
   dynamicOptions?: DynamicOptions;
 }
 
-export default function AddFilterModal({ isOpen, onClose, onAdd, dynamicOptions }: AddFilterModalProps) {
+export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editingFilter, dynamicOptions }: AddFilterModalProps) {
   const [selectedField, setSelectedField] = useState<FilterField | null>(null);
   const [selectedOperator, setSelectedOperator] = useState<FilterOperator | null>(null);
   const [value, setValue] = useState<any>(null);
-  
+
   // Get filter fields with dynamic options
   const filterFields = getFilterFields(dynamicOptions);
 
-  // Reset state when modal opens/closes
+  const isEditing = !!editingFilter;
+
+  // Initialize state when modal opens (for editing or new)
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen && editingFilter) {
+      // Pre-populate fields when editing
+      const field = filterFields.find((f) => f.key === editingFilter.field);
+      setSelectedField(field || null);
+      setSelectedOperator(editingFilter.operator);
+      setValue(editingFilter.value);
+    } else if (!isOpen) {
+      // Reset state when modal closes
       setSelectedField(null);
       setSelectedOperator(null);
       setValue(null);
     }
-  }, [isOpen]);
+  }, [isOpen, editingFilter, filterFields]);
 
   if (!isOpen) return null;
 
-  const handleAdd = () => {
+  const handleSave = () => {
     if (!selectedField || !selectedOperator) return;
-    
+
     // Validate value based on operator
     if (selectedOperator !== 'is_empty' && selectedOperator !== 'is_not_empty') {
       if (value === null || value === undefined || value === '') return;
       if (Array.isArray(value) && value.length === 0) return;
     }
 
-    onAdd({
-      id: `${Date.now()}-${Math.random()}`,
+    const filterData: FilterCondition = {
+      id: isEditing && editingFilter ? editingFilter.id : `${Date.now()}-${Math.random()}`,
       field: selectedField.key,
       fieldLabel: selectedField.label,
       operator: selectedOperator,
       value: value,
-    });
+    };
+
+    if (isEditing && onUpdate) {
+      onUpdate(filterData);
+    } else {
+      onAdd(filterData);
+    }
 
     onClose();
   };
@@ -248,7 +265,7 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, dynamicOptions 
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Add Filter</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{isEditing ? 'Edit Filter' : 'Add Filter'}</h3>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -331,11 +348,11 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, dynamicOptions 
             Cancel
           </button>
           <button
-            onClick={handleAdd}
+            onClick={handleSave}
             disabled={!canAdd()}
             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           >
-            Add Filter
+            {isEditing ? 'Update Filter' : 'Add Filter'}
           </button>
         </div>
       </div>

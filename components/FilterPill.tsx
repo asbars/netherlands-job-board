@@ -11,9 +11,10 @@ import { OPERATOR_LABELS } from '@/lib/filterConfig';
 interface FilterPillProps {
   filter: FilterCondition;
   onRemove: () => void;
+  onEdit: () => void;
 }
 
-export default function FilterPill({ filter, onRemove }: FilterPillProps) {
+export default function FilterPill({ filter, onRemove, onEdit }: FilterPillProps) {
   const formatValue = (value: any): string => {
     if (value === null || value === undefined) return '';
     
@@ -37,13 +38,20 @@ export default function FilterPill({ filter, onRemove }: FilterPillProps) {
 
   return (
     <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-full text-sm group hover:bg-blue-100 transition-colors">
-      <div className="flex items-center gap-1.5">
+      <button
+        onClick={onEdit}
+        className="flex items-center gap-1.5 hover:underline"
+        title="Click to edit filter"
+      >
         <span className="font-medium text-blue-900">{filter.fieldLabel}</span>
         <span className="text-blue-600 text-xs">{OPERATOR_LABELS[filter.operator]}</span>
         <span className="font-medium text-blue-900">{formatValue(filter.value)}</span>
-      </div>
+      </button>
       <button
-        onClick={onRemove}
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove();
+        }}
         className="text-blue-500 hover:text-blue-700 transition-colors flex-shrink-0"
         aria-label="Remove filter"
         title="Remove filter"
