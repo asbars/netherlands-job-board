@@ -1,6 +1,6 @@
 /**
  * Job List Component
- * Displays filtered job listings using the Metabase-style filter engine
+ * Displays paginated job listings with page size selector
  */
 
 'use client';
@@ -16,18 +16,29 @@ interface JobListProps {
   filters: FilterCondition[];
 }
 
+const PAGE_SIZE_OPTIONS = [20, 50, 100];
+
 export default function JobList({ filters }: JobListProps) {
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [filters]);
 
   useEffect(() => {
     async function loadJobs() {
       try {
         setLoading(true);
         setError(null);
-        const data = await fetchJobs();
-        setJobs(data);
+        const result = await fetchJobs({ page, pageSize });
+        setJobs(result.jobs);
+        setTotalCount(result.totalCount);
       } catch (err) {
         setError('Failed to load jobs. Please check your connection and try again.');
         console.error(err);
@@ -37,10 +48,64 @@ export default function JobList({ filters }: JobListProps) {
     }
 
     loadJobs();
-  }, []);
+  }, [page, pageSize]);
 
-  // Apply filters using the filter engine
-  const filteredJobs = applyFilters(jobs, filters);
+  // Apply filters to current page (client-side for now)
+  const filteredJobs = filters.length > 0 ? applyFilters(jobs, filters) : jobs;
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+  const startItem = (page - 1) * pageSize + 1;
+  const endItem = Math.min(page * pageSize, totalCount);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+      // Scroll to top of job list
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setPage(1); // Reset to first page when changing page size
+  };
+
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible + 2) {
+      // Show all pages if total is small
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+
+      if (page > 3) {
+        pages.push('...');
+      }
+
+      // Show pages around current
+      const start = Math.max(2, page - 1);
+      const end = Math.min(totalPages - 1, page + 1);
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (page < totalPages - 2) {
+        pages.push('...');
+      }
+
+      // Always show last page
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
 
   if (loading) {
     return (
@@ -65,7 +130,7 @@ export default function JobList({ filters }: JobListProps) {
     );
   }
 
-  if (filteredJobs.length === 0 && jobs.length === 0) {
+  if (totalCount === 0) {
     return (
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-12 text-center">
         <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,48 +144,90 @@ export default function JobList({ filters }: JobListProps) {
     );
   }
 
-  if (filteredJobs.length === 0) {
-    return (
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-12 text-center">
-        <svg className="w-16 h-16 text-amber-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-        </svg>
-        <p className="text-amber-900 text-lg font-medium mb-2">No matching jobs</p>
-        <p className="text-amber-700 text-sm mb-4">
-          {jobs.length} {jobs.length === 1 ? 'job' : 'jobs'} available, but none match your filters.
-        </p>
-        <p className="text-amber-600 text-xs">
-          Try removing or adjusting some filters
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div>
+      {/* Header with count and page size selector */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-900">
-            {filteredJobs.length === jobs.length ? 'All Jobs' : 'Filtered Results'}
+            Job Listings
           </h2>
-          <div className="text-sm text-gray-500">
-            {filteredJobs.length.toLocaleString()} {filteredJobs.length === 1 ? 'job' : 'jobs'}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span>Show:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {PAGE_SIZE_OPTIONS.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+              <span>per page</span>
+            </div>
           </div>
         </div>
-        
-        {filteredJobs.length < jobs.length && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-sm text-blue-700">
-            <span className="font-medium">{filteredJobs.length}</span> of{' '}
-            <span className="font-medium">{jobs.length}</span> jobs match your filters
-          </div>
-        )}
+
+        <div className="text-sm text-gray-500">
+          Showing {startItem.toLocaleString()}-{endItem.toLocaleString()} of {totalCount.toLocaleString()} jobs
+        </div>
       </div>
 
+      {/* Job cards */}
       <div className="space-y-4">
         {filteredJobs.map((job) => (
           <JobCard key={job.id} job={job} />
         ))}
       </div>
+
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div className="mt-8 flex items-center justify-center gap-2">
+          {/* Previous button */}
+          <button
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page === 1}
+            className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+
+          {/* Page numbers */}
+          <div className="flex items-center gap-1">
+            {getPageNumbers().map((pageNum, index) => (
+              pageNum === '...' ? (
+                <span key={`ellipsis-${index}`} className="px-3 py-2 text-gray-500">
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={pageNum}
+                  onClick={() => handlePageChange(pageNum as number)}
+                  className={`px-3 py-2 text-sm font-medium rounded-lg ${
+                    page === pageNum
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              )
+            ))}
+          </div>
+
+          {/* Next button */}
+          <button
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page === totalPages}
+            className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }
