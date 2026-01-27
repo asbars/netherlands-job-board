@@ -12,12 +12,13 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export async function fetchJobs(): Promise<Job[]> {
   console.log('Fetching jobs from Supabase...');
-  
+
   const { data, error } = await supabase
     .from('jobmarket_jobs')
     .select('*')
     .eq('status', 'active')
-    .order('first_seen_date', { ascending: false });
+    .order('first_seen_date', { ascending: false })
+    .range(0, 9999); // Override Supabase default limit of 1000
 
   if (error) {
     console.error('Error fetching jobs:', error);
