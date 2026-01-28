@@ -44,6 +44,7 @@ export async function fetchNewJobsFromAPI(config: ApifyRunConfig = {}): Promise<
       limit,
       includeAi: include_ai,
       includeLinkedIn: include_li,
+      descriptionType: 'html',
     };
     
     if (locationSearch && locationSearch.length > 0) {
@@ -114,6 +115,7 @@ export async function fetchAllJobsFromFeed(config: ApifyRunConfig = {}): Promise
       limit,
       includeAi: include_ai,
       includeLinkedIn: include_li,
+      descriptionType: 'html',
     };
 
     if (locationSearch && locationSearch.length > 0) {

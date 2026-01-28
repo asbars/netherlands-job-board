@@ -75,10 +75,11 @@ async function fetchJobsFromFeed(): Promise<any[]> {
   try {
     // Start the actor run using SDK
     const run = await apifyClient.actor(CAREER_SITE_FEED_ACTOR_ID).call({
-      locationSearch: ['Netherlands'], // Filter by Netherlands
-      maxItems: MAX_JOBS, // Get latest 2000 jobs
-      include_ai: true,
-      include_li: true,
+      locationSearch: ['Netherlands'],
+      limit: MAX_JOBS,
+      includeAi: true,
+      includeLinkedIn: true,
+      descriptionType: 'html',
     });
     
     console.log(`📋 Run ID: ${run.id}`);
