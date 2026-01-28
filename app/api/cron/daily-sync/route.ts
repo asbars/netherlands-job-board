@@ -136,10 +136,10 @@ export async function GET(request: NextRequest) {
     console.log('📥 Fetching new jobs from Apify...');
     const jobs = await fetchNewJobsFromAPI({
       timeframe: '24hours',
-      locationSearch: ['Netherlands'], // ✅ Using correct locationSearch parameter
+      locationSearch: ['Netherlands'],
       include_ai: true,
       include_li: true,
-      limit: 5000,
+      limit: 1000,
     });
     
     console.log(`✅ Retrieved ${jobs.length} jobs from Apify`);
