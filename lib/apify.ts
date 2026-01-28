@@ -18,8 +18,8 @@ const EXPIRED_JOBS_ACTOR_ID = 'fantastic-jobs~career-site-job-listing-expired-jo
  * Returns only jobs added in the specified timeframe
  */
 export async function fetchNewJobsFromAPI(config: ApifyRunConfig = {}): Promise<ApifyJobData[]> {
-  const { 
-    timeframe = '24hours', 
+  const {
+    timeframe = '24h',
     locationSearch = ['Netherlands'], 
     locationExclusionSearch,
     titleSearch,

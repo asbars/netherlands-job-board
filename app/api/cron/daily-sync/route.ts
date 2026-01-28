@@ -135,7 +135,7 @@ export async function GET(request: NextRequest) {
     // Fetch new jobs from Apify (last 24 hours, Netherlands only)
     console.log('📥 Fetching new jobs from Apify...');
     const jobs = await fetchNewJobsFromAPI({
-      timeframe: '24hours',
+      timeframe: '24h',
       locationSearch: ['Netherlands'],
       include_ai: true,
       include_li: true,
