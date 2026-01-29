@@ -11,6 +11,8 @@ import FilterPill from './FilterPill';
 import AddFilterModal from './AddFilterModal';
 import { getFilterDescription } from '@/lib/filterEngine';
 import { DynamicOptions } from '@/lib/dynamicFilterOptions';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 interface MetabaseStyleFiltersProps {
   filters: FilterCondition[];
@@ -57,27 +59,28 @@ export default function MetabaseStyleFilters({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+    <Card>
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
-            <p className="text-xs text-gray-500 mt-0.5">{getFilterDescription(filters)}</p>
+            <CardTitle>Filters</CardTitle>
+            <p className="text-xs text-muted-foreground mt-0.5">{getFilterDescription(filters)}</p>
           </div>
           {filters.length > 0 && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleClearAll}
-              className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium"
             >
               Clear all
-            </button>
+            </Button>
           )}
         </div>
-      </div>
+      </CardHeader>
 
       {/* Filter Pills */}
-      <div className="px-6 py-4">
+      <CardContent className="pb-4">
         {filters.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {filters.map((filter) => (
@@ -92,24 +95,25 @@ export default function MetabaseStyleFilters({
         )}
 
         {/* Add Filter Button */}
-        <button
+        <Button
+          variant="ghost"
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium"
+          className="text-primary"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           Add filter
-        </button>
-      </div>
+        </Button>
+      </CardContent>
 
       {/* Result Count */}
-      <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
+      <div className="px-6 py-4 bg-muted border-t rounded-b-lg">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-600">
-            Showing <span className="font-semibold text-gray-900">{resultCount.toLocaleString()}</span> 
+          <p className="text-sm text-muted-foreground">
+            Showing <span className="font-semibold text-foreground">{resultCount.toLocaleString()}</span>
             {' '}of{' '}
-            <span className="font-semibold text-gray-900">{totalCount.toLocaleString()}</span> jobs
+            <span className="font-semibold text-foreground">{totalCount.toLocaleString()}</span> jobs
           </p>
           {filters.length > 0 && resultCount === 0 && (
             <span className="text-xs text-amber-600 font-medium">
@@ -117,11 +121,11 @@ export default function MetabaseStyleFilters({
             </span>
           )}
         </div>
-        
+
         {/* Progress bar */}
-        <div className="mt-2 h-1 bg-gray-200 rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-blue-600 transition-all duration-300"
+        <div className="mt-2 h-1 bg-secondary rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary transition-all duration-300"
             style={{ width: `${totalCount > 0 ? (resultCount / totalCount) * 100 : 0}%` }}
           />
         </div>
@@ -136,7 +140,7 @@ export default function MetabaseStyleFilters({
         editingFilter={editingFilter}
         dynamicOptions={dynamicOptions}
       />
-    </div>
+    </Card>
   );
 }
 
