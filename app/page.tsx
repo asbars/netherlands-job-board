@@ -72,17 +72,25 @@ export default function Home() {
   }, [filters]);
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
-        <header className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+        <header className="mb-6">
+          <h1 className="text-4xl font-bold text-foreground mb-2">
             Netherlands Job Board
           </h1>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Find your next opportunity in the Netherlands with advanced filtering
           </p>
         </header>
+
+        {/* Section title - above both columns */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-foreground">All Jobs</h2>
+          <div className="text-sm text-muted-foreground">
+            {filteredCount.toLocaleString()} {filteredCount === 1 ? 'job' : 'jobs'} found
+          </div>
+        </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left sidebar - Advanced Filters */}
@@ -100,7 +108,7 @@ export default function Home() {
 
           {/* Right content - Job listings */}
           <div className="flex-1 min-w-0">
-            <JobList filters={filters} />
+            <JobList filters={filters} hideHeader />
           </div>
         </div>
       </div>
