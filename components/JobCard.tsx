@@ -69,6 +69,27 @@ export default function JobCard({ job }: JobCardProps) {
         </div>
       )}
 
+      {(job.ai_core_responsibilities || job.ai_requirements_summary) && (
+        <div className="mb-3 text-sm text-gray-700 space-y-2">
+          {job.ai_core_responsibilities && (
+            <p>
+              <span className="font-medium text-gray-900">Responsibilities:</span>{' '}
+              {job.ai_core_responsibilities.length > 200
+                ? job.ai_core_responsibilities.slice(0, 200) + '...'
+                : job.ai_core_responsibilities}
+            </p>
+          )}
+          {job.ai_requirements_summary && (
+            <p>
+              <span className="font-medium text-gray-900">Requirements:</span>{' '}
+              {job.ai_requirements_summary.length > 200
+                ? job.ai_requirements_summary.slice(0, 200) + '...'
+                : job.ai_requirements_summary}
+            </p>
+          )}
+        </div>
+      )}
+
       {job.ai_benefits && job.ai_benefits.length > 0 && (
         <div className="mb-3 text-sm text-gray-600">
           <span className="font-medium">Benefits:</span> {job.ai_benefits.slice(0, 3).join(', ')}
