@@ -131,7 +131,7 @@ function applyFiltersToQuery(
 }
 
 /**
- * Get exchange rates for salary filtering
+ * Get exchange rates for salary filtering with 1-hour caching
  * Returns rates to convert FROM source currencies TO target currency
  */
 async function getExchangeRatesForFilters(filters: FilterCondition[]): Promise<Record<string, number>> {
@@ -166,13 +166,12 @@ async function getExchangeRatesForFilters(filters: FilterCondition[]): Promise<R
     ) as string[];
 
     // For each source currency, we need the rate FROM that currency TO target currency
-    // We'll fetch rates individually using the Frankfurter API
     const ratesObject: Record<string, number> = {};
 
     // Add target currency with rate 1 (no conversion needed)
     ratesObject[targetCurrency] = 1;
 
-    // Fetch rates for other currencies
+    // Fetch rates for other currencies (with caching)
     for (const sourceCurrency of uniqueCurrencies) {
       if (sourceCurrency === targetCurrency) {
         ratesObject[sourceCurrency] = 1;
@@ -180,15 +179,39 @@ async function getExchangeRatesForFilters(filters: FilterCondition[]): Promise<R
       }
 
       try {
-        // Fetch rate FROM source TO target
-        // Example: FROM USD TO EUR -> multiply USD by this rate to get EUR
+        // First, try to get cached rate (less than 1 hour old)
+        const { data: cachedRate, error: cacheError } = await supabase.rpc(
+          'get_cached_exchange_rate',
+          {
+            p_from_currency: sourceCurrency,
+            p_to_currency: targetCurrency,
+          }
+        );
+
+        if (!cacheError && cachedRate !== null) {
+          // Use cached rate
+          console.log(`Using cached rate for ${sourceCurrency} → ${targetCurrency}: ${cachedRate}`);
+          ratesObject[sourceCurrency] = cachedRate;
+          continue;
+        }
+
+        // Cache miss or expired - fetch from API
+        console.log(`Fetching fresh rate for ${sourceCurrency} → ${targetCurrency}`);
         const response = await fetch(
           `https://api.frankfurter.app/latest?from=${sourceCurrency}&to=${targetCurrency}`
         );
 
         if (response.ok) {
           const data = await response.json();
-          ratesObject[sourceCurrency] = data.rates[targetCurrency] || 1;
+          const rate = data.rates[targetCurrency] || 1;
+          ratesObject[sourceCurrency] = rate;
+
+          // Save to cache
+          await supabase.rpc('set_cached_exchange_rate', {
+            p_from_currency: sourceCurrency,
+            p_to_currency: targetCurrency,
+            p_rate: rate,
+          });
         } else {
           console.warn(`Failed to fetch rate for ${sourceCurrency} to ${targetCurrency}`);
           ratesObject[sourceCurrency] = 1; // Fallback to 1
