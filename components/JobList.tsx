@@ -84,8 +84,9 @@ export default function JobList({ filters }: JobListProps) {
         setJobs(result.jobs);
         setTotalCount(result.totalCount);
       } catch (err) {
-        setError('Failed to load jobs. Please check your connection and try again.');
-        console.error(err);
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        setError(`Failed to load jobs: ${errorMessage}`);
+        console.error('JobList error:', err);
       } finally {
         setLoading(false);
       }

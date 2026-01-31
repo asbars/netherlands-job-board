@@ -179,6 +179,8 @@ export async function fetchJobsPaginated(
       is_array_value: Array.isArray(f.value),
     }));
 
+    console.log('RPC filters:', JSON.stringify(filtersJson, null, 2));
+
     const { data, error } = await supabase.rpc('search_jobs_with_filters', {
       p_filters: filtersJson,
       p_page: page,
@@ -187,7 +189,12 @@ export async function fetchJobsPaginated(
 
     if (error) {
       console.error('Error fetching jobs via RPC:', error);
-      throw error;
+      console.error('Filter data sent:', JSON.stringify(filtersJson));
+      // If RPC doesn't exist, throw with helpful message
+      if (error.message?.includes('function') || error.code === '42883') {
+        throw new Error('Database function not found. Please run sql/array_text_search.sql in Supabase SQL Editor.');
+      }
+      throw new Error(`RPC Error: ${error.message || error.code}`);
     }
 
     const result = data?.[0];
