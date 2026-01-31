@@ -44,9 +44,9 @@ export default function JobCard({ job }: JobCardProps) {
                     : JSON.stringify(job.cities_derived).replace(/[\[\]"]/g, '')}
                 </span>
               )}
-              {job.employment_type && job.employment_type.length > 0 && (
+              {job.ai_employment_type && job.ai_employment_type.length > 0 && (
                 <Badge variant="secondary">
-                  {formatEmploymentType(job.employment_type[0])}
+                  {formatEmploymentType(job.ai_employment_type[0])}
                 </Badge>
               )}
               {job.ai_experience_level && (

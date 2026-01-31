@@ -53,9 +53,9 @@ export default async function JobPage({ params }: JobPageProps) {
                     {Array.isArray(job.cities_derived) ? job.cities_derived.join(', ') : job.cities_derived}
                   </span>
                 )}
-                {job.employment_type && job.employment_type.length > 0 && (
+                {job.ai_employment_type && job.ai_employment_type.length > 0 && (
                   <Badge variant="secondary">
-                    {job.employment_type.map(formatEmploymentType).join(', ')}
+                    {job.ai_employment_type.map(formatEmploymentType).join(', ')}
                   </Badge>
                 )}
                 {job.ai_experience_level && (
