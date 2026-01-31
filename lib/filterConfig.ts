@@ -93,7 +93,7 @@ export function getFilterFields(dynamicOptions?: DynamicOptions): FilterField[] 
       key: 'ai_employment_type',
       label: 'Employment Type',
       type: 'multiselect',
-      operators: ['is_any_of', 'is_not_any_of', 'contains', 'not_contains', 'is_empty', 'is_not_empty'],
+      operators: ['is_any_of', 'is_not_any_of'],
       options: dynamicOptions?.aiEmploymentTypes || [],
       description: 'Full-time, Part-time, Contract, Internship, etc.',
     },
