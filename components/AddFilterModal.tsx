@@ -6,7 +6,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { FilterField, FilterCondition, FilterOperator } from '@/types/filters';
+import { FilterField, FilterCondition, FilterOperator, SalaryUnit } from '@/types/filters';
 import { getFilterFields, OPERATOR_LABELS } from '@/lib/filterConfig';
 import { DynamicOptions } from '@/lib/dynamicFilterOptions';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editi
   const [selectedField, setSelectedField] = useState<FilterField | null>(null);
   const [selectedOperator, setSelectedOperator] = useState<FilterOperator | null>(null);
   const [value, setValue] = useState<any>(null);
+  const [salaryUnit, setSalaryUnit] = useState<SalaryUnit | null>(null);
 
   // Get filter fields with dynamic options - memoized to prevent re-renders
   const filterFields = useMemo(() => getFilterFields(dynamicOptions), [dynamicOptions]);
@@ -39,11 +40,13 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editi
       setSelectedField(field || null);
       setSelectedOperator(editingFilter.operator);
       setValue(editingFilter.value);
+      setSalaryUnit(editingFilter.salary_unit || null);
     } else if (!isOpen) {
       // Reset state when modal closes
       setSelectedField(null);
       setSelectedOperator(null);
       setValue(null);
+      setSalaryUnit(null);
     }
   }, [isOpen, editingFilter?.id, filterFields]);
 
@@ -51,6 +54,11 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editi
 
   const handleSave = () => {
     if (!selectedField || !selectedOperator) return;
+
+    // For salary fields, validate that unit is selected
+    if (selectedField.isSalaryField && selectedOperator !== 'is_empty' && selectedOperator !== 'is_not_empty') {
+      if (!salaryUnit) return;
+    }
 
     // Validate value based on operator
     if (selectedOperator !== 'is_empty' && selectedOperator !== 'is_not_empty') {
@@ -76,6 +84,7 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editi
       fieldLabel: selectedField.label,
       operator: selectedOperator,
       value: finalValue,
+      ...(selectedField.isSalaryField && salaryUnit && { salary_unit: salaryUnit }),
     };
 
     if (isEditing && onUpdate) {
@@ -89,16 +98,19 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editi
 
   const canAdd = () => {
     if (!selectedField || !selectedOperator) return false;
-    
+
     // Empty/not empty operators don't need a value
     if (selectedOperator === 'is_empty' || selectedOperator === 'is_not_empty') {
       return true;
     }
-    
+
+    // For salary fields, check that unit is selected
+    if (selectedField.isSalaryField && !salaryUnit) return false;
+
     // Check if value is provided
     if (value === null || value === undefined || value === '') return false;
     if (Array.isArray(value) && value.length === 0) return false;
-    
+
     return true;
   };
 
@@ -358,11 +370,35 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editi
             </div>
           )}
 
-          {/* Step 3: Enter Value */}
-          {selectedOperator && (
+          {/* Step 2.5: Select Salary Unit (for salary fields only) */}
+          {selectedField?.isSalaryField && selectedOperator &&
+           selectedOperator !== 'is_empty' && selectedOperator !== 'is_not_empty' && (
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                3. What value?
+                3. Select salary unit
+              </label>
+              <select
+                value={salaryUnit || ''}
+                onChange={(e) => setSalaryUnit(e.target.value as SalaryUnit)}
+                className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent text-foreground bg-background"
+              >
+                <option value="">Choose a unit...</option>
+                <option value="per hour">Per Hour</option>
+                <option value="per month">Per Month</option>
+                <option value="per year">Per Year</option>
+              </select>
+              <p className="mt-1 text-xs text-muted-foreground">
+                All salaries will be converted to this unit for comparison
+              </p>
+            </div>
+          )}
+
+          {/* Step 3 (or 4 for salary): Enter Value */}
+          {selectedOperator && (!selectedField?.isSalaryField || salaryUnit ||
+           selectedOperator === 'is_empty' || selectedOperator === 'is_not_empty') && (
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                {selectedField?.isSalaryField && selectedOperator !== 'is_empty' && selectedOperator !== 'is_not_empty' ? '4' : '3'}. What value?
               </label>
               {renderValueInput()}
             </div>

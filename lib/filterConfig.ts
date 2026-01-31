@@ -121,7 +121,8 @@ export function getFilterFields(dynamicOptions?: DynamicOptions): FilterField[] 
       type: 'number',
       operators: ['greater_than', 'less_than', 'between', 'equals', 'is_empty', 'is_not_empty'],
       placeholder: 'e.g., 50000',
-      description: 'Filter by minimum salary amount',
+      description: 'Filter by minimum salary amount (requires unit selection)',
+      isSalaryField: true,
     },
     {
       key: 'ai_salary_maxvalue',
@@ -129,7 +130,8 @@ export function getFilterFields(dynamicOptions?: DynamicOptions): FilterField[] 
       type: 'number',
       operators: ['greater_than', 'less_than', 'between', 'equals', 'is_empty', 'is_not_empty'],
       placeholder: 'e.g., 80000',
-      description: 'Filter by maximum salary amount',
+      description: 'Filter by maximum salary amount (requires unit selection)',
+      isSalaryField: true,
     },
     {
       key: 'ai_salary_value',
@@ -137,7 +139,8 @@ export function getFilterFields(dynamicOptions?: DynamicOptions): FilterField[] 
       type: 'number',
       operators: ['greater_than', 'less_than', 'between', 'equals', 'is_empty', 'is_not_empty'],
       placeholder: 'e.g., 65000',
-      description: 'Filter by exact salary (when no range)',
+      description: 'Filter by exact salary (when no range) (requires unit selection)',
+      isSalaryField: true,
     },
     {
       key: 'ai_salary_currency',

@@ -15,12 +15,15 @@ export type FilterOperator =
   | 'is_empty'
   | 'is_not_empty';
 
+export type SalaryUnit = 'per hour' | 'per month' | 'per year';
+
 export interface FilterCondition {
   id: string;
   field: string;
   fieldLabel: string;
   operator: FilterOperator;
   value: any; // Can be string, number, array, boolean, etc.
+  salary_unit?: SalaryUnit; // For salary fields only
 }
 
 export interface FilterField {
@@ -31,6 +34,7 @@ export interface FilterField {
   options?: { value: string; label: string }[];
   placeholder?: string;
   description?: string;
+  isSalaryField?: boolean; // Indicates this field requires salary unit selection
 }
 
 export interface FilterState {

@@ -24,9 +24,12 @@ const ARRAY_FIELDS = [
   'ai_job_language',
 ];
 
-// Fields that require RPC function due to special handling (e.g., NULL = Hybrid/On-site)
+// Fields that require RPC function due to special handling (e.g., NULL = Hybrid/On-site, salary conversion)
 const SPECIAL_HANDLING_FIELDS = [
   'ai_work_arrangement', // NULL values treated as Hybrid/On-site
+  'ai_salary_minvalue', // Salary conversion
+  'ai_salary_maxvalue', // Salary conversion
+  'ai_salary_value', // Salary conversion
 ];
 
 /**
@@ -130,13 +133,14 @@ function applyFiltersToQuery(
  * Fetch total count of active jobs in database (with optional filters)
  */
 export async function fetchJobsCount(filters: FilterCondition[] = []): Promise<number> {
-  // Use RPC function if we have any array field filters
+  // Use RPC function if we have any array field or special handling filters
   if (requiresRpcSearch(filters)) {
     const filtersJson = filters.map((f) => ({
       field: f.field,
       operator: f.operator,
       value: f.value,
       is_array_value: Array.isArray(f.value),
+      ...(f.salary_unit && { salary_unit: f.salary_unit }),
     }));
 
     const { data, error } = await supabase.rpc('search_jobs_with_filters', {
@@ -178,13 +182,14 @@ export async function fetchJobsPaginated(
   pageSize: number = 20,
   filters: FilterCondition[] = []
 ): Promise<{ jobs: Job[]; totalCount: number }> {
-  // Use RPC function if we have any array field filters
+  // Use RPC function if we have any array field or special handling filters
   if (requiresRpcSearch(filters)) {
     const filtersJson = filters.map((f) => ({
       field: f.field,
       operator: f.operator,
       value: f.value,
       is_array_value: Array.isArray(f.value),
+      ...(f.salary_unit && { salary_unit: f.salary_unit }),
     }));
 
     console.log('RPC filters:', JSON.stringify(filtersJson, null, 2));
