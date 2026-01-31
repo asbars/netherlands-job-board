@@ -246,6 +246,24 @@ export async function fetchJobsSample(limit: number = 1000): Promise<Job[]> {
   return data || [];
 }
 
+/**
+ * Count jobs with office days information
+ */
+export async function countJobsWithOfficeDays(): Promise<number> {
+  const { count, error } = await supabase
+    .from('jobmarket_jobs')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'active')
+    .not('ai_work_arrangement_office_days', 'is', null);
+
+  if (error) {
+    console.error('Error counting jobs with office days:', error);
+    return 0;
+  }
+
+  return count || 0;
+}
+
 export async function fetchJobById(id: number): Promise<Job | null> {
   const { data, error } = await supabase
     .from('jobmarket_jobs')

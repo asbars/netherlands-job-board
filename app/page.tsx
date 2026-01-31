@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import { FilterCondition } from '@/types/filters';
 import MetabaseStyleFilters from '@/components/MetabaseStyleFilters';
 import JobList from '@/components/JobList';
-import { fetchJobsCount, fetchJobsSample } from '@/lib/supabase';
+import { fetchJobsCount, fetchJobsSample, countJobsWithOfficeDays } from '@/lib/supabase';
 import { generateDynamicOptions, DynamicOptions, getEmptyOptions } from '@/lib/dynamicFilterOptions';
 import { getFiltersFromUrl, updateUrlWithFilters } from '@/lib/filterUrl';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -49,6 +49,11 @@ export default function Home() {
         // Fetch sample of jobs to generate filter dropdown options
         const sampleJobs = await fetchJobsSample(1000);
         const options = generateDynamicOptions(sampleJobs);
+
+        // Fetch actual count of jobs with office days information
+        const officeDaysCount = await countJobsWithOfficeDays();
+        options.officeDaysCount = officeDaysCount;
+
         setDynamicOptions(options);
       } catch (error) {
         console.error('Error loading initial data:', error);

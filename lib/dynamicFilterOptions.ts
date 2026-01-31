@@ -183,12 +183,6 @@ export function generateDynamicOptions(jobs: Job[]): DynamicOptions {
     label: formatEmploymentType(type),
   }));
 
-  // Count jobs with office days information
-  const officeDaysCount = jobs.filter(job =>
-    job.ai_work_arrangement_office_days !== null &&
-    job.ai_work_arrangement_office_days !== undefined
-  ).length;
-
   return {
     cities,
     regions,
@@ -206,7 +200,7 @@ export function generateDynamicOptions(jobs: Job[]): DynamicOptions {
     taxonomies,
     benefits,
     aiEmploymentTypes,
-    officeDaysCount,
+    // officeDaysCount will be added separately from database query
   };
 }
 
