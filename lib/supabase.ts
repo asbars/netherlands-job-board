@@ -24,6 +24,17 @@ const ARRAY_FIELDS = [
 ];
 
 /**
+ * Check if any filter requires the RPC function (array text search)
+ */
+function requiresRpcSearch(filters: FilterCondition[]): boolean {
+  return filters.some(
+    (f) =>
+      ARRAY_FIELDS.includes(f.field) &&
+      (f.operator === 'contains' || f.operator === 'not_contains')
+  );
+}
+
+/**
  * Apply filters to a Supabase query
  */
 function applyFiltersToQuery(
@@ -115,6 +126,28 @@ function applyFiltersToQuery(
  * Fetch total count of active jobs in database (with optional filters)
  */
 export async function fetchJobsCount(filters: FilterCondition[] = []): Promise<number> {
+  // Use RPC function if we have array text filters
+  if (requiresRpcSearch(filters)) {
+    const filtersJson = filters.map((f) => ({
+      field: f.field,
+      operator: f.operator,
+      value: Array.isArray(f.value) ? `{${f.value.join(',')}}` : f.value,
+    }));
+
+    const { data, error } = await supabase.rpc('search_jobs_with_filters', {
+      p_filters: filtersJson,
+      p_page: 1,
+      p_page_size: 1,
+    });
+
+    if (error) {
+      console.error('Error fetching job count via RPC:', error);
+      throw error;
+    }
+
+    return Number(data?.[0]?.total_count) || 0;
+  }
+
   let query = supabase
     .from('jobmarket_jobs')
     .select('*', { count: 'exact', head: true })
@@ -140,6 +173,33 @@ export async function fetchJobsPaginated(
   pageSize: number = 20,
   filters: FilterCondition[] = []
 ): Promise<{ jobs: Job[]; totalCount: number }> {
+  // Use RPC function if we have array text filters (contains/not_contains on array fields)
+  if (requiresRpcSearch(filters)) {
+    const filtersJson = filters.map((f) => ({
+      field: f.field,
+      operator: f.operator,
+      value: Array.isArray(f.value) ? `{${f.value.join(',')}}` : f.value,
+    }));
+
+    const { data, error } = await supabase.rpc('search_jobs_with_filters', {
+      p_filters: filtersJson,
+      p_page: page,
+      p_page_size: pageSize,
+    });
+
+    if (error) {
+      console.error('Error fetching jobs via RPC:', error);
+      throw error;
+    }
+
+    const result = data?.[0];
+    return {
+      jobs: result?.jobs || [],
+      totalCount: Number(result?.total_count) || 0,
+    };
+  }
+
+  // Use regular query for non-array text filters
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
