@@ -15,7 +15,7 @@ export type FilterOperator =
   | 'is_empty'
   | 'is_not_empty';
 
-export type SalaryUnit = 'per hour' | 'per month' | 'per year';
+export type SalaryPeriod = 'per hour' | 'per month' | 'per year';
 
 export interface FilterCondition {
   id: string;
@@ -23,7 +23,9 @@ export interface FilterCondition {
   fieldLabel: string;
   operator: FilterOperator;
   value: any; // Can be string, number, array, boolean, etc.
-  salary_unit?: SalaryUnit; // For salary fields only
+  salary_period?: SalaryPeriod; // For salary fields only
+  salary_currency?: string; // For salary fields only (e.g., 'EUR', 'USD')
+  exchange_rate?: number; // Exchange rate from job currency to selected currency
 }
 
 export interface FilterField {

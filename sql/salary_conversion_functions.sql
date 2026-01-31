@@ -81,6 +81,70 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 GRANT EXECUTE ON FUNCTION public.convert_salary_to_unit(numeric, text, text, numeric) TO anon, authenticated;
 
 -- ========================================
+-- Combined Period + Currency Conversion Function
+-- ========================================
+
+-- Function to convert salary with both period and currency conversion
+-- This function combines period conversion with currency conversion
+CREATE OR REPLACE FUNCTION public.convert_salary_full(
+  p_value numeric,
+  p_from_period text,
+  p_to_period text,
+  p_from_currency text,
+  p_to_currency text,
+  p_exchange_rate_map jsonb,
+  p_working_hours numeric DEFAULT 40
+)
+RETURNS numeric AS $$
+DECLARE
+  v_period_converted numeric;
+  v_exchange_rate numeric;
+  v_currency_key text;
+BEGIN
+  -- Handle NULL values
+  IF p_value IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  -- Step 1: Convert period (hour/month/year)
+  v_period_converted := public.convert_salary_to_unit(
+    p_value,
+    p_from_period,
+    p_to_period,
+    p_working_hours
+  );
+
+  IF v_period_converted IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  -- Step 2: Convert currency
+  -- If same currency, no conversion needed
+  IF p_from_currency = p_to_currency OR p_from_currency IS NULL OR p_to_currency IS NULL THEN
+    RETURN v_period_converted;
+  END IF;
+
+  -- Get exchange rate from the map
+  -- Map format: { "USD": 1.08, "GBP": 0.86, "EUR": 1.0, ... }
+  v_currency_key := UPPER(COALESCE(p_from_currency, ''));
+
+  IF p_exchange_rate_map IS NOT NULL AND jsonb_typeof(p_exchange_rate_map) = 'object' THEN
+    v_exchange_rate := (p_exchange_rate_map->>v_currency_key)::numeric;
+
+    IF v_exchange_rate IS NOT NULL THEN
+      RETURN v_period_converted * v_exchange_rate;
+    END IF;
+  END IF;
+
+  -- If no exchange rate found, return period-converted value without currency conversion
+  RETURN v_period_converted;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+-- Grant access
+GRANT EXECUTE ON FUNCTION public.convert_salary_full(numeric, text, text, text, text, jsonb, numeric) TO anon, authenticated;
+
+-- ========================================
 -- Test conversions
 -- ========================================
 

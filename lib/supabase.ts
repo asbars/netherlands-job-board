@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Job } from '@/types/job';
 import { FilterCondition } from '@/types/filters';
+import { getExchangeRates } from './currencyConverter';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -130,6 +131,82 @@ function applyFiltersToQuery(
 }
 
 /**
+ * Get exchange rates for salary filtering
+ * Returns rates to convert FROM source currencies TO target currency
+ */
+async function getExchangeRatesForFilters(filters: FilterCondition[]): Promise<Record<string, number>> {
+  // Find salary filters with currency
+  const salaryFilters = filters.filter(f =>
+    ['ai_salary_minvalue', 'ai_salary_maxvalue', 'ai_salary_value'].includes(f.field) &&
+    f.salary_currency
+  );
+
+  if (salaryFilters.length === 0) {
+    return {};
+  }
+
+  // Get target currency (should be same for all salary filters)
+  const targetCurrency = salaryFilters[0].salary_currency!;
+
+  try {
+    // Get unique currencies from database
+    const { data: currencies, error } = await supabase
+      .from('jobmarket_jobs')
+      .select('ai_salary_currency')
+      .eq('status', 'active')
+      .not('ai_salary_currency', 'is', null);
+
+    if (error) {
+      console.error('Error fetching currencies:', error);
+      return {};
+    }
+
+    const uniqueCurrencies = Array.from(
+      new Set(currencies.map(c => c.ai_salary_currency).filter(Boolean))
+    ) as string[];
+
+    // For each source currency, we need the rate FROM that currency TO target currency
+    // We'll fetch rates individually using the Frankfurter API
+    const ratesObject: Record<string, number> = {};
+
+    // Add target currency with rate 1 (no conversion needed)
+    ratesObject[targetCurrency] = 1;
+
+    // Fetch rates for other currencies
+    for (const sourceCurrency of uniqueCurrencies) {
+      if (sourceCurrency === targetCurrency) {
+        ratesObject[sourceCurrency] = 1;
+        continue;
+      }
+
+      try {
+        // Fetch rate FROM source TO target
+        // Example: FROM USD TO EUR -> multiply USD by this rate to get EUR
+        const response = await fetch(
+          `https://api.frankfurter.app/latest?from=${sourceCurrency}&to=${targetCurrency}`
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          ratesObject[sourceCurrency] = data.rates[targetCurrency] || 1;
+        } else {
+          console.warn(`Failed to fetch rate for ${sourceCurrency} to ${targetCurrency}`);
+          ratesObject[sourceCurrency] = 1; // Fallback to 1
+        }
+      } catch (err) {
+        console.warn(`Error fetching rate for ${sourceCurrency}:`, err);
+        ratesObject[sourceCurrency] = 1; // Fallback to 1
+      }
+    }
+
+    return ratesObject;
+  } catch (error) {
+    console.error('Error getting exchange rates:', error);
+    return {};
+  }
+}
+
+/**
  * Fetch total count of active jobs in database (with optional filters)
  */
 export async function fetchJobsCount(filters: FilterCondition[] = []): Promise<number> {
@@ -140,13 +217,18 @@ export async function fetchJobsCount(filters: FilterCondition[] = []): Promise<n
       operator: f.operator,
       value: f.value,
       is_array_value: Array.isArray(f.value),
-      ...(f.salary_unit && { salary_unit: f.salary_unit }),
+      ...(f.salary_period && { salary_period: f.salary_period }),
+      ...(f.salary_currency && { salary_currency: f.salary_currency }),
     }));
+
+    // Get exchange rates if we have salary filters
+    const exchangeRates = await getExchangeRatesForFilters(filters);
 
     const { data, error } = await supabase.rpc('search_jobs_with_filters', {
       p_filters: filtersJson,
       p_page: 1,
       p_page_size: 1,
+      p_exchange_rates: exchangeRates,
     });
 
     if (error) {
@@ -189,15 +271,21 @@ export async function fetchJobsPaginated(
       operator: f.operator,
       value: f.value,
       is_array_value: Array.isArray(f.value),
-      ...(f.salary_unit && { salary_unit: f.salary_unit }),
+      ...(f.salary_period && { salary_period: f.salary_period }),
+      ...(f.salary_currency && { salary_currency: f.salary_currency }),
     }));
 
     console.log('RPC filters:', JSON.stringify(filtersJson, null, 2));
+
+    // Get exchange rates if we have salary filters
+    const exchangeRates = await getExchangeRatesForFilters(filters);
+    console.log('Exchange rates:', exchangeRates);
 
     const { data, error } = await supabase.rpc('search_jobs_with_filters', {
       p_filters: filtersJson,
       p_page: page,
       p_page_size: pageSize,
+      p_exchange_rates: exchangeRates,
     });
 
     if (error) {

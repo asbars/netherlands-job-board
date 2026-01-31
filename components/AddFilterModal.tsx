@@ -6,11 +6,12 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { FilterField, FilterCondition, FilterOperator, SalaryUnit } from '@/types/filters';
+import { FilterField, FilterCondition, FilterOperator, SalaryPeriod } from '@/types/filters';
 import { getFilterFields, OPERATOR_LABELS } from '@/lib/filterConfig';
 import { DynamicOptions } from '@/lib/dynamicFilterOptions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SUPPORTED_CURRENCIES, getExchangeRate } from '@/lib/currencyConverter';
 
 interface AddFilterModalProps {
   isOpen: boolean;
@@ -25,7 +26,11 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editi
   const [selectedField, setSelectedField] = useState<FilterField | null>(null);
   const [selectedOperator, setSelectedOperator] = useState<FilterOperator | null>(null);
   const [value, setValue] = useState<any>(null);
-  const [salaryUnit, setSalaryUnit] = useState<SalaryUnit | null>(null);
+  const [salaryPeriod, setSalaryPeriod] = useState<SalaryPeriod | null>(null);
+  const [salaryCurrency, setSalaryCurrency] = useState<string>('EUR'); // Default to EUR
+  const [exchangeRate, setExchangeRate] = useState<number>(1);
+  const [loadingRate, setLoadingRate] = useState<boolean>(false);
+  const [rateError, setRateError] = useState<string | null>(null);
 
   // Get filter fields with dynamic options - memoized to prevent re-renders
   const filterFields = useMemo(() => getFilterFields(dynamicOptions), [dynamicOptions]);
@@ -40,24 +45,41 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editi
       setSelectedField(field || null);
       setSelectedOperator(editingFilter.operator);
       setValue(editingFilter.value);
-      setSalaryUnit(editingFilter.salary_unit || null);
+      setSalaryPeriod(editingFilter.salary_period || null);
+      setSalaryCurrency(editingFilter.salary_currency || 'EUR');
+      setExchangeRate(editingFilter.exchange_rate || 1);
     } else if (!isOpen) {
       // Reset state when modal closes
       setSelectedField(null);
       setSelectedOperator(null);
       setValue(null);
-      setSalaryUnit(null);
+      setSalaryPeriod(null);
+      setSalaryCurrency('EUR');
+      setExchangeRate(1);
+      setLoadingRate(false);
+      setRateError(null);
     }
   }, [isOpen, editingFilter?.id, filterFields]);
+
+  // Fetch exchange rate when currency changes
+  // Note: We'll fetch rates for all database currencies to the selected currency
+  // This happens when user changes currency selection
+  useEffect(() => {
+    if (!selectedField?.isSalaryField || !salaryCurrency) return;
+
+    // For now, we just set exchange rate to 1
+    // The actual conversion will happen in the backend based on each job's currency
+    setExchangeRate(1);
+  }, [salaryCurrency, selectedField]);
 
   if (!isOpen) return null;
 
   const handleSave = () => {
     if (!selectedField || !selectedOperator) return;
 
-    // For salary fields, validate that unit is selected
+    // For salary fields, validate that period and currency are selected
     if (selectedField.isSalaryField && selectedOperator !== 'is_empty' && selectedOperator !== 'is_not_empty') {
-      if (!salaryUnit) return;
+      if (!salaryPeriod || !salaryCurrency) return;
     }
 
     // Validate value based on operator
@@ -84,7 +106,8 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editi
       fieldLabel: selectedField.label,
       operator: selectedOperator,
       value: finalValue,
-      ...(selectedField.isSalaryField && salaryUnit && { salary_unit: salaryUnit }),
+      ...(selectedField.isSalaryField && salaryPeriod && { salary_period: salaryPeriod }),
+      ...(selectedField.isSalaryField && salaryCurrency && { salary_currency: salaryCurrency }),
     };
 
     if (isEditing && onUpdate) {
@@ -104,8 +127,8 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editi
       return true;
     }
 
-    // For salary fields, check that unit is selected
-    if (selectedField.isSalaryField && !salaryUnit) return false;
+    // For salary fields, check that period and currency are selected
+    if (selectedField.isSalaryField && (!salaryPeriod || !salaryCurrency)) return false;
 
     // Check if value is provided
     if (value === null || value === undefined || value === '') return false;
@@ -346,11 +369,56 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editi
             )}
           </div>
 
-          {/* Step 2: Select Operator */}
-          {selectedField && (
+          {/* Step 2: Select Salary Period (for salary fields only) */}
+          {selectedField?.isSalaryField && (
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                2. How do you want to filter?
+                2. Select salary period
+              </label>
+              <select
+                value={salaryPeriod || ''}
+                onChange={(e) => setSalaryPeriod(e.target.value as SalaryPeriod)}
+                className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent text-foreground bg-background"
+              >
+                <option value="">Choose a period...</option>
+                <option value="per hour">Per Hour</option>
+                <option value="per month">Per Month</option>
+                <option value="per year">Per Year</option>
+              </select>
+              <p className="mt-1 text-xs text-muted-foreground">
+                All salaries will be converted to this period for comparison
+              </p>
+            </div>
+          )}
+
+          {/* Step 3: Select Currency (for salary fields only) */}
+          {selectedField?.isSalaryField && salaryPeriod && (
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                3. Select currency
+              </label>
+              <select
+                value={salaryCurrency}
+                onChange={(e) => setSalaryCurrency(e.target.value)}
+                className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent text-foreground bg-background"
+              >
+                {SUPPORTED_CURRENCIES.map((curr) => (
+                  <option key={curr.code} value={curr.code}>
+                    {curr.name} ({curr.symbol})
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-muted-foreground">
+                All salaries will be converted to {salaryCurrency} using current exchange rates
+              </p>
+            </div>
+          )}
+
+          {/* Step 4 (or 2 for non-salary): Select Operator */}
+          {selectedField && (!selectedField.isSalaryField || (salaryPeriod && salaryCurrency)) && (
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                {selectedField.isSalaryField ? '4' : '2'}. How do you want to filter?
               </label>
               <select
                 value={selectedOperator || ''}
@@ -370,35 +438,11 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editi
             </div>
           )}
 
-          {/* Step 2.5: Select Salary Unit (for salary fields only) */}
-          {selectedField?.isSalaryField && selectedOperator &&
-           selectedOperator !== 'is_empty' && selectedOperator !== 'is_not_empty' && (
+          {/* Step 5 (or 3 for non-salary): Enter Value */}
+          {selectedOperator && (
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                3. Select salary unit
-              </label>
-              <select
-                value={salaryUnit || ''}
-                onChange={(e) => setSalaryUnit(e.target.value as SalaryUnit)}
-                className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent text-foreground bg-background"
-              >
-                <option value="">Choose a unit...</option>
-                <option value="per hour">Per Hour</option>
-                <option value="per month">Per Month</option>
-                <option value="per year">Per Year</option>
-              </select>
-              <p className="mt-1 text-xs text-muted-foreground">
-                All salaries will be converted to this unit for comparison
-              </p>
-            </div>
-          )}
-
-          {/* Step 3 (or 4 for salary): Enter Value */}
-          {selectedOperator && (!selectedField?.isSalaryField || salaryUnit ||
-           selectedOperator === 'is_empty' || selectedOperator === 'is_not_empty') && (
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                {selectedField?.isSalaryField && selectedOperator !== 'is_empty' && selectedOperator !== 'is_not_empty' ? '4' : '3'}. What value?
+                {selectedField?.isSalaryField && selectedOperator !== 'is_empty' && selectedOperator !== 'is_not_empty' ? '5' : '3'}. What value?
               </label>
               {renderValueInput()}
             </div>
