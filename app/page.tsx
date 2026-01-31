@@ -12,6 +12,7 @@ import JobList from '@/components/JobList';
 import { fetchJobsCount, fetchJobsSample } from '@/lib/supabase';
 import { generateDynamicOptions, DynamicOptions, getEmptyOptions } from '@/lib/dynamicFilterOptions';
 import { getFiltersFromUrl, updateUrlWithFilters } from '@/lib/filterUrl';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function Home() {
   const [filters, setFilters] = useState<FilterCondition[]>([]);
@@ -75,13 +76,16 @@ export default function Home() {
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
-        <header className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">
-            Netherlands Job Board
-          </h1>
-          <p className="text-muted-foreground">
-            Find your next opportunity in the Netherlands with advanced filtering
-          </p>
+        <header className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground mb-2">
+              Netherlands Job Board
+            </h1>
+            <p className="text-muted-foreground">
+              Find your next opportunity in the Netherlands with advanced filtering
+            </p>
+          </div>
+          <ThemeToggle />
         </header>
 
         <div className="flex flex-col lg:flex-row gap-6">
