@@ -23,7 +23,8 @@ export interface DynamicOptions {
   taxonomies: { value: string; label: string }[];
   benefits: { value: string; label: string }[];
   aiEmploymentTypes: { value: string; label: string }[];
-  officeDaysCount?: number;
+  officeDaysWithInfo?: number;
+  totalHybridJobs?: number;
 }
 
 /**
@@ -226,7 +227,8 @@ export function getEmptyOptions(): DynamicOptions {
     taxonomies: [],
     benefits: [],
     aiEmploymentTypes: [],
-    officeDaysCount: 0,
+    officeDaysWithInfo: 0,
+    totalHybridJobs: 0,
   };
 }
 

@@ -247,21 +247,35 @@ export async function fetchJobsSample(limit: number = 1000): Promise<Job[]> {
 }
 
 /**
- * Count jobs with office days information
+ * Count jobs with office days information and total hybrid jobs
  */
-export async function countJobsWithOfficeDays(): Promise<number> {
-  const { count, error } = await supabase
+export async function countJobsWithOfficeDays(): Promise<{ withOfficeDays: number; totalHybrid: number }> {
+  // Count jobs with office days information
+  const { count: withDaysCount, error: daysError } = await supabase
     .from('jobmarket_jobs')
     .select('*', { count: 'exact', head: true })
     .eq('status', 'active')
     .not('ai_work_arrangement_office_days', 'is', null);
 
-  if (error) {
-    console.error('Error counting jobs with office days:', error);
-    return 0;
+  if (daysError) {
+    console.error('Error counting jobs with office days:', daysError);
   }
 
-  return count || 0;
+  // Count hybrid jobs (including NULL as per v6 logic)
+  const { count: hybridCount, error: hybridError } = await supabase
+    .from('jobmarket_jobs')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'active')
+    .or('ai_work_arrangement.eq.Hybrid,ai_work_arrangement.is.null');
+
+  if (hybridError) {
+    console.error('Error counting hybrid jobs:', hybridError);
+  }
+
+  return {
+    withOfficeDays: withDaysCount || 0,
+    totalHybrid: hybridCount || 0,
+  };
 }
 
 export async function fetchJobById(id: number): Promise<Job | null> {

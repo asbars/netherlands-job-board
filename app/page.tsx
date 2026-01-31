@@ -50,9 +50,10 @@ export default function Home() {
         const sampleJobs = await fetchJobsSample(1000);
         const options = generateDynamicOptions(sampleJobs);
 
-        // Fetch actual count of jobs with office days information
-        const officeDaysCount = await countJobsWithOfficeDays();
-        options.officeDaysCount = officeDaysCount;
+        // Fetch actual counts for office days information
+        const { withOfficeDays, totalHybrid } = await countJobsWithOfficeDays();
+        options.officeDaysWithInfo = withOfficeDays;
+        options.totalHybridJobs = totalHybrid;
 
         setDynamicOptions(options);
       } catch (error) {

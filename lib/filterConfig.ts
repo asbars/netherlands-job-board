@@ -83,8 +83,8 @@ export function getFilterFields(dynamicOptions?: DynamicOptions): FilterField[] 
       type: 'number',
       operators: ['equals', 'greater_than', 'less_than', 'is_empty', 'is_not_empty'],
       placeholder: 'e.g., 2, 3',
-      description: dynamicOptions?.officeDaysCount
-        ? `Number of days in office per week (for hybrid). Information is only available for ${dynamicOptions.officeDaysCount.toLocaleString()} jobs`
+      description: dynamicOptions?.officeDaysWithInfo && dynamicOptions?.totalHybridJobs
+        ? `Number of days in office per week (for hybrid). Information is only available for ${dynamicOptions.officeDaysWithInfo.toLocaleString()} out of ${dynamicOptions.totalHybridJobs.toLocaleString()} hybrid jobs`
         : 'Number of days in office per week (for hybrid)',
     },
 
