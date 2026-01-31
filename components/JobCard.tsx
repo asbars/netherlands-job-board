@@ -20,7 +20,7 @@ export default function JobCard({ job }: JobCardProps) {
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <Link href={`/jobs/${job.id}`}>
+            <Link href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer">
               <h3 className="text-xl font-semibold text-foreground hover:text-muted-foreground hover:underline mb-1 cursor-pointer">
                 {job.title}
               </h3>
