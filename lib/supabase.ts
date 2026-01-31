@@ -24,14 +24,10 @@ const ARRAY_FIELDS = [
 ];
 
 /**
- * Check if any filter requires the RPC function (array text search)
+ * Check if any filter requires the RPC function (any array field filter)
  */
 function requiresRpcSearch(filters: FilterCondition[]): boolean {
-  return filters.some(
-    (f) =>
-      ARRAY_FIELDS.includes(f.field) &&
-      (f.operator === 'contains' || f.operator === 'not_contains')
-  );
+  return filters.some((f) => ARRAY_FIELDS.includes(f.field));
 }
 
 /**
@@ -126,12 +122,13 @@ function applyFiltersToQuery(
  * Fetch total count of active jobs in database (with optional filters)
  */
 export async function fetchJobsCount(filters: FilterCondition[] = []): Promise<number> {
-  // Use RPC function if we have array text filters
+  // Use RPC function if we have any array field filters
   if (requiresRpcSearch(filters)) {
     const filtersJson = filters.map((f) => ({
       field: f.field,
       operator: f.operator,
-      value: Array.isArray(f.value) ? `{${f.value.join(',')}}` : f.value,
+      value: f.value,
+      is_array_value: Array.isArray(f.value),
     }));
 
     const { data, error } = await supabase.rpc('search_jobs_with_filters', {
@@ -173,12 +170,13 @@ export async function fetchJobsPaginated(
   pageSize: number = 20,
   filters: FilterCondition[] = []
 ): Promise<{ jobs: Job[]; totalCount: number }> {
-  // Use RPC function if we have array text filters (contains/not_contains on array fields)
+  // Use RPC function if we have any array field filters
   if (requiresRpcSearch(filters)) {
     const filtersJson = filters.map((f) => ({
       field: f.field,
       operator: f.operator,
-      value: Array.isArray(f.value) ? `{${f.value.join(',')}}` : f.value,
+      value: f.value,
+      is_array_value: Array.isArray(f.value),
     }));
 
     const { data, error } = await supabase.rpc('search_jobs_with_filters', {
