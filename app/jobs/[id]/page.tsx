@@ -191,7 +191,7 @@ export default async function JobPage({ params }: JobPageProps) {
 
           {/* Posted date */}
           <div className="mt-6 text-sm text-muted-foreground">
-            Posted {formatRelativeDate(job.first_seen_date)}
+            Posted {formatRelativeDate(job.date_posted || job.first_seen_date)}
           </div>
         </CardContent>
         </Card>

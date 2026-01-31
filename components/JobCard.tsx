@@ -62,7 +62,7 @@ export default function JobCard({ job }: JobCardProps) {
             </div>
           </div>
           <div className="text-right text-sm text-muted-foreground ml-4">
-            {formatRelativeDate(job.first_seen_date)}
+            {formatRelativeDate(job.date_posted || job.first_seen_date)}
           </div>
         </div>
 
