@@ -108,9 +108,9 @@ export default function MetabaseStyleFilters({
       </CardContent>
 
       {/* Result Count */}
-      <div className="px-6 py-4 bg-muted border-t rounded-b-lg overflow-hidden">
+      <div className="px-6 py-4 bg-muted border-t rounded-b-lg">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground mb-0">
+          <p className="text-sm text-muted-foreground">
             Showing <span className="font-semibold text-foreground">{resultCount.toLocaleString()}</span>
             {' '}of{' '}
             <span className="font-semibold text-foreground">{totalCount.toLocaleString()}</span> jobs
