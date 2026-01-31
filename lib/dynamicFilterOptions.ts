@@ -23,6 +23,7 @@ export interface DynamicOptions {
   taxonomies: { value: string; label: string }[];
   benefits: { value: string; label: string }[];
   aiEmploymentTypes: { value: string; label: string }[];
+  officeDaysCount?: number;
 }
 
 /**
@@ -182,6 +183,12 @@ export function generateDynamicOptions(jobs: Job[]): DynamicOptions {
     label: formatEmploymentType(type),
   }));
 
+  // Count jobs with office days information
+  const officeDaysCount = jobs.filter(job =>
+    job.ai_work_arrangement_office_days !== null &&
+    job.ai_work_arrangement_office_days !== undefined
+  ).length;
+
   return {
     cities,
     regions,
@@ -199,6 +206,7 @@ export function generateDynamicOptions(jobs: Job[]): DynamicOptions {
     taxonomies,
     benefits,
     aiEmploymentTypes,
+    officeDaysCount,
   };
 }
 
@@ -224,6 +232,7 @@ export function getEmptyOptions(): DynamicOptions {
     taxonomies: [],
     benefits: [],
     aiEmploymentTypes: [],
+    officeDaysCount: 0,
   };
 }
 
