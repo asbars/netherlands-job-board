@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { FilterField, FilterCondition, FilterOperator } from '@/types/filters';
 import { getFilterFields, OPERATOR_LABELS } from '@/lib/filterConfig';
 import { DynamicOptions } from '@/lib/dynamicFilterOptions';
@@ -26,8 +26,8 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editi
   const [selectedOperator, setSelectedOperator] = useState<FilterOperator | null>(null);
   const [value, setValue] = useState<any>(null);
 
-  // Get filter fields with dynamic options
-  const filterFields = getFilterFields(dynamicOptions);
+  // Get filter fields with dynamic options - memoized to prevent re-renders
+  const filterFields = useMemo(() => getFilterFields(dynamicOptions), [dynamicOptions]);
 
   const isEditing = !!editingFilter;
 
@@ -45,7 +45,7 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editi
       setSelectedOperator(null);
       setValue(null);
     }
-  }, [isOpen, editingFilter, filterFields]);
+  }, [isOpen, editingFilter?.id, filterFields]);
 
   if (!isOpen) return null;
 
@@ -58,12 +58,24 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editi
       if (Array.isArray(value) && value.length === 0) return;
     }
 
+    // Auto-swap dates for 'between' operator if they're in reverse order
+    let finalValue = value;
+    if (selectedOperator === 'between' && Array.isArray(value) && value.length === 2) {
+      const [start, end] = value;
+      if (selectedField.type === 'date' && start && end && start > end) {
+        finalValue = [end, start]; // Swap to ensure start <= end
+      }
+      if (selectedField.type === 'number' && start && end && start > end) {
+        finalValue = [end, start]; // Swap to ensure min <= max
+      }
+    }
+
     const filterData: FilterCondition = {
       id: isEditing && editingFilter ? editingFilter.id : `${Date.now()}-${Math.random()}`,
       field: selectedField.key,
       fieldLabel: selectedField.label,
       operator: selectedOperator,
-      value: value,
+      value: finalValue,
     };
 
     if (isEditing && onUpdate) {
