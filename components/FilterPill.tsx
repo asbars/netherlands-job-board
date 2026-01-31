@@ -6,24 +6,42 @@
 'use client';
 
 import { FilterCondition } from '@/types/filters';
-import { OPERATOR_LABELS } from '@/lib/filterConfig';
+import { OPERATOR_LABELS, getFilterFields } from '@/lib/filterConfig';
+import { DynamicOptions } from '@/lib/dynamicFilterOptions';
 import { Badge } from '@/components/ui/badge';
 
 interface FilterPillProps {
   filter: FilterCondition;
   onRemove: () => void;
   onEdit: () => void;
+  dynamicOptions?: DynamicOptions;
 }
 
-export default function FilterPill({ filter, onRemove, onEdit }: FilterPillProps) {
+export default function FilterPill({ filter, onRemove, onEdit, dynamicOptions }: FilterPillProps) {
   const formatValue = (value: any): string => {
     if (value === null || value === undefined) return '';
 
     if (Array.isArray(value)) {
       if (value.length === 0) return '';
-      if (value.length === 1) return String(value[0]);
-      if (value.length === 2) return value.join(' or ');
-      return `${value.slice(0, 2).join(', ')} or ${value.length - 2} more`;
+
+      // Get field configuration to look up labels
+      const filterFields = getFilterFields(dynamicOptions);
+      const field = filterFields.find(f => f.key === filter.field);
+
+      // Format each value by looking up its label from field options
+      const formattedValues = value.map((val) => {
+        if (field && field.options) {
+          const option = field.options.find(opt => opt.value === val);
+          if (option) {
+            return option.label;
+          }
+        }
+        return String(val);
+      });
+
+      if (formattedValues.length === 1) return formattedValues[0];
+      if (formattedValues.length === 2) return formattedValues.join(' or ');
+      return `${formattedValues.slice(0, 2).join(', ')} or ${formattedValues.length - 2} more`;
     }
 
     if (typeof value === 'boolean') {
@@ -32,6 +50,16 @@ export default function FilterPill({ filter, onRemove, onEdit }: FilterPillProps
 
     if (typeof value === 'number') {
       return value.toLocaleString();
+    }
+
+    // For single values, also look up label from field options
+    const filterFields = getFilterFields(dynamicOptions);
+    const field = filterFields.find(f => f.key === filter.field);
+    if (field && field.options) {
+      const option = field.options.find(opt => opt.value === value);
+      if (option) {
+        return option.label;
+      }
     }
 
     return String(value);

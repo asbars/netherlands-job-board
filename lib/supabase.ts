@@ -16,6 +16,7 @@ const ARRAY_FIELDS = [
   'cities_derived',
   'regions_derived',
   'employment_type',
+  'ai_employment_type',
   'ai_benefits',
   'ai_key_skills',
   'ai_keywords',
@@ -23,11 +24,18 @@ const ARRAY_FIELDS = [
   'ai_job_language',
 ];
 
+// Fields that require RPC function due to special handling (e.g., NULL = Hybrid/On-site)
+const SPECIAL_HANDLING_FIELDS = [
+  'ai_work_arrangement', // NULL values treated as Hybrid/On-site
+];
+
 /**
- * Check if any filter requires the RPC function (any array field filter)
+ * Check if any filter requires the RPC function (array fields or special handling)
  */
 function requiresRpcSearch(filters: FilterCondition[]): boolean {
-  return filters.some((f) => ARRAY_FIELDS.includes(f.field));
+  return filters.some((f) =>
+    ARRAY_FIELDS.includes(f.field) || SPECIAL_HANDLING_FIELDS.includes(f.field)
+  );
 }
 
 /**

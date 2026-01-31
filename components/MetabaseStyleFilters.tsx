@@ -89,6 +89,7 @@ export default function MetabaseStyleFilters({
                 filter={filter}
                 onRemove={() => handleRemoveFilter(filter.id)}
                 onEdit={() => handleEditFilter(filter)}
+                dynamicOptions={dynamicOptions}
               />
             ))}
           </div>
