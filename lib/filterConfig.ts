@@ -101,7 +101,7 @@ export function getFilterFields(dynamicOptions?: DynamicOptions): FilterField[] 
       key: 'ai_experience_level',
       label: 'Experience Level',
       type: 'multiselect',
-      operators: ['is_any_of', 'is_not_any_of', 'contains', 'not_contains', 'is_empty', 'is_not_empty'],
+      operators: ['is_any_of', 'is_not_any_of'],
       options: dynamicOptions?.experienceLevels || [],
       description: 'Entry, Mid, Senior, Expert',
     },
