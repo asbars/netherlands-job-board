@@ -9,6 +9,7 @@ import { FilterCondition } from '@/types/filters';
 import { OPERATOR_LABELS, getFilterFields } from '@/lib/filterConfig';
 import { DynamicOptions } from '@/lib/dynamicFilterOptions';
 import { Badge } from '@/components/ui/badge';
+import { SUPPORTED_CURRENCIES } from '@/lib/currencyConverter';
 
 interface FilterPillProps {
   filter: FilterCondition;
@@ -18,9 +19,50 @@ interface FilterPillProps {
 }
 
 export default function FilterPill({ filter, onRemove, onEdit, dynamicOptions }: FilterPillProps) {
+  // Check if this is a salary field
+  const isSalaryField = ['ai_salary_minvalue', 'ai_salary_maxvalue', 'ai_salary_value'].includes(filter.field);
+
+  // Get currency symbol
+  const getCurrencySymbol = (currencyCode?: string): string => {
+    if (!currencyCode) return '';
+    const currency = SUPPORTED_CURRENCIES.find(c => c.code === currencyCode);
+    return currency?.symbol || currencyCode;
+  };
+
+  // Format period (remove 'per' prefix for display)
+  const formatPeriod = (period?: string): string => {
+    if (!period) return '';
+    // "per year" → "year", "per month" → "month", etc.
+    return period.replace('per ', '');
+  };
+
   const formatValue = (value: any): string => {
     if (value === null || value === undefined) return '';
 
+    // Special formatting for salary fields
+    if (isSalaryField && filter.salary_currency && filter.salary_period) {
+      const currencySymbol = getCurrencySymbol(filter.salary_currency);
+      const period = formatPeriod(filter.salary_period);
+
+      if (Array.isArray(value)) {
+        // For "between" operator with two values
+        if (value.length === 2) {
+          return `${currencySymbol}${value[0].toLocaleString()} - ${currencySymbol}${value[1].toLocaleString()} / ${period}`;
+        }
+        if (value.length === 1) {
+          return `${currencySymbol}${value[0].toLocaleString()} / ${period}`;
+        }
+        return '';
+      }
+
+      if (typeof value === 'number') {
+        return `${currencySymbol}${value.toLocaleString()} / ${period}`;
+      }
+
+      return `${currencySymbol}${value} / ${period}`;
+    }
+
+    // Regular array handling (non-salary)
     if (Array.isArray(value)) {
       if (value.length === 0) return '';
 
