@@ -73,7 +73,7 @@ export function getFilterFields(dynamicOptions?: DynamicOptions): FilterField[] 
       key: 'ai_work_arrangement',
       label: 'Work Arrangement',
       type: 'multiselect',
-      operators: ['is_any_of', 'is_not_any_of', 'contains', 'not_contains', 'is_empty', 'is_not_empty'],
+      operators: ['is_any_of', 'is_not_any_of'],
       options: dynamicOptions?.workArrangements || [],
       description: 'On-site, Hybrid, Remote, etc.',
     },
