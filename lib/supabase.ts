@@ -190,11 +190,8 @@ export async function fetchJobsPaginated(
     if (error) {
       console.error('Error fetching jobs via RPC:', error);
       console.error('Filter data sent:', JSON.stringify(filtersJson));
-      // If RPC doesn't exist, throw with helpful message
-      if (error.message?.includes('function') || error.code === '42883') {
-        throw new Error('Database function not found. Please run sql/array_text_search.sql in Supabase SQL Editor.');
-      }
-      throw new Error(`RPC Error: ${error.message || error.code}`);
+      console.error('Full error object:', JSON.stringify(error, null, 2));
+      throw error;
     }
 
     const result = data?.[0];
