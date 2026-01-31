@@ -37,8 +37,9 @@ function applyFiltersToQuery(
     switch (operator) {
       case 'contains':
         if (isArrayField) {
-          // For array fields, check if array contains the exact value
-          query = query.contains(field, [value]);
+          // For array fields, cast to text and use ilike for partial matching
+          // This allows "Amster" to match "Amsterdam"
+          query = query.filter(`${field}::text`, 'ilike', `%${value}%`);
         } else {
           query = query.ilike(field, `%${value}%`);
         }
@@ -46,8 +47,8 @@ function applyFiltersToQuery(
 
       case 'not_contains':
         if (isArrayField) {
-          // For array fields, check that array doesn't contain the value
-          query = query.not(field, 'cs', `{"${value}"}`);
+          // For array fields, cast to text and use not ilike
+          query = query.not(`${field}::text`, 'ilike', `%${value}%`);
         } else {
           query = query.not(field, 'ilike', `%${value}%`);
         }
