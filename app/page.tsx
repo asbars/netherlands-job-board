@@ -85,10 +85,10 @@ export default function Home() {
         <header className="mb-8 flex items-start justify-between">
           <div>
             <h1 className="text-4xl font-bold text-foreground mb-2">
-              Netherlands Job Board
+              Netherlands Job Opportunities
             </h1>
             <p className="text-muted-foreground">
-              Find your next opportunity in the Netherlands with advanced filtering
+              Find your dream job in the Netherlands with advanced filtering and notification
             </p>
           </div>
           <ThemeToggle />

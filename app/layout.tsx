@@ -6,9 +6,9 @@ import { ThemeProvider } from '@/components/theme-provider'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Netherlands Job Board - Jobs for Expats',
-  description: 'Find jobs in the Netherlands from verified company career sites. Daily updates with the latest opportunities for expats.',
-  keywords: 'jobs, netherlands, expats, career, employment, work permit',
+  title: 'Netherlands Job Opportunities - Find Your Dream Job',
+  description: 'Find your dream job in the Netherlands with advanced filtering and notification. Daily updates with the latest opportunities for expats.',
+  keywords: 'jobs, netherlands, expats, career, employment, work permit, job opportunities',
 }
 
 export default function RootLayout({
