@@ -75,7 +75,7 @@ export default function Home() {
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
-        <header className="mb-6">
+        <header className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">
             Netherlands Job Board
           </h1>
@@ -84,31 +84,21 @@ export default function Home() {
           </p>
         </header>
 
-        {/* Section title - above both columns */}
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-foreground">All Jobs</h2>
-          <div className="text-sm text-muted-foreground">
-            {filteredCount.toLocaleString()} {filteredCount === 1 ? 'job' : 'jobs'} found
-          </div>
-        </div>
-
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left sidebar - Advanced Filters */}
           <aside className="w-full lg:w-96 flex-shrink-0">
-            <div className="sticky top-4">
-              <MetabaseStyleFilters
-                filters={filters}
-                onFiltersChange={setFilters}
-                resultCount={filteredCount}
-                totalCount={totalJobs}
-                dynamicOptions={dynamicOptions}
-              />
-            </div>
+            <MetabaseStyleFilters
+              filters={filters}
+              onFiltersChange={setFilters}
+              resultCount={filteredCount}
+              totalCount={totalJobs}
+              dynamicOptions={dynamicOptions}
+            />
           </aside>
 
           {/* Right content - Job listings */}
           <div className="flex-1 min-w-0">
-            <JobList filters={filters} hideHeader />
+            <JobList filters={filters} />
           </div>
         </div>
       </div>

@@ -16,7 +16,6 @@ const DEFAULT_PAGE_SIZE = 20;
 
 interface JobListProps {
   filters: FilterCondition[];
-  hideHeader?: boolean;
 }
 
 function PaginationControls({
@@ -25,12 +24,14 @@ function PaginationControls({
   totalCount,
   pageSize,
   onPageChange,
+  position = 'bottom',
 }: {
   currentPage: number;
   totalPages: number;
   totalCount: number;
   pageSize: number;
   onPageChange: (page: number) => void;
+  position?: 'top' | 'bottom';
 }) {
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, totalCount);
@@ -38,7 +39,7 @@ function PaginationControls({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-between border-t py-4">
+    <div className={`flex items-center justify-between py-3 ${position === 'bottom' ? 'border-t' : ''}`}>
       <div className="text-sm text-muted-foreground">
         Showing {startIndex + 1}-{endIndex} of {totalCount.toLocaleString()}
       </div>
@@ -67,7 +68,7 @@ function PaginationControls({
   );
 }
 
-export default function JobList({ filters, hideHeader = false }: JobListProps) {
+export default function JobList({ filters }: JobListProps) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -147,17 +148,6 @@ export default function JobList({ filters, hideHeader = false }: JobListProps) {
 
   return (
     <div>
-      {!hideHeader && (
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-foreground">All Jobs</h2>
-            <div className="text-sm text-muted-foreground">
-              {totalCount.toLocaleString()} {totalCount === 1 ? 'job' : 'jobs'}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Top Pagination */}
       <PaginationControls
         currentPage={currentPage}
@@ -165,9 +155,10 @@ export default function JobList({ filters, hideHeader = false }: JobListProps) {
         totalCount={totalCount}
         pageSize={pageSize}
         onPageChange={handlePageChange}
+        position="top"
       />
 
-      <div className="space-y-4 my-4">
+      <div className="space-y-4 py-4">
         {jobs.map((job) => (
           <JobCard key={job.id} job={job} />
         ))}
@@ -180,6 +171,7 @@ export default function JobList({ filters, hideHeader = false }: JobListProps) {
         totalCount={totalCount}
         pageSize={pageSize}
         onPageChange={handlePageChange}
+        position="bottom"
       />
     </div>
   );

@@ -116,7 +116,7 @@ export default function MetabaseStyleFilters({
             <span className="font-semibold text-foreground">{totalCount.toLocaleString()}</span> jobs
           </p>
           {filters.length > 0 && resultCount === 0 && (
-            <span className="text-xs text-amber-600 font-medium">
+            <span className="text-xs text-muted-foreground font-medium">
               Try adjusting filters
             </span>
           )}

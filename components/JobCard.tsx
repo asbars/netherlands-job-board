@@ -21,7 +21,7 @@ export default function JobCard({ job }: JobCardProps) {
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <Link href={`/jobs/${job.id}`}>
-              <h3 className="text-xl font-semibold text-blue-600 hover:text-blue-800 hover:underline mb-1 cursor-pointer">
+              <h3 className="text-xl font-semibold text-foreground hover:text-muted-foreground hover:underline mb-1 cursor-pointer">
                 {job.title}
               </h3>
             </Link>
@@ -39,17 +39,17 @@ export default function JobCard({ job }: JobCardProps) {
                 </span>
               )}
               {job.employment_type && job.employment_type.length > 0 && (
-                <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+                <Badge variant="secondary">
                   {formatEmploymentType(job.employment_type[0])}
                 </Badge>
               )}
               {job.ai_experience_level && (
-                <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100">
+                <Badge variant="secondary">
                   {job.ai_experience_level} years
                 </Badge>
               )}
               {job.remote_derived && (
-                <Badge variant="secondary" className="bg-purple-100 text-purple-700 hover:bg-purple-100">
+                <Badge variant="secondary">
                   Remote
                 </Badge>
               )}
@@ -61,7 +61,7 @@ export default function JobCard({ job }: JobCardProps) {
         </div>
 
         {(job.ai_salary_minvalue || job.ai_salary_value) && (
-          <div className="mb-3 text-sm font-semibold text-green-600">
+          <div className="mb-3 text-sm font-semibold text-foreground">
             {formatSalaryRange(
               job.ai_salary_minvalue,
               job.ai_salary_maxvalue,

@@ -54,17 +54,17 @@ export default async function JobPage({ params }: JobPageProps) {
                   </span>
                 )}
                 {job.employment_type && job.employment_type.length > 0 && (
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+                  <Badge variant="secondary">
                     {job.employment_type.map(formatEmploymentType).join(', ')}
                   </Badge>
                 )}
                 {job.ai_experience_level && (
-                  <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100">
+                  <Badge variant="secondary">
                     {job.ai_experience_level} years experience
                   </Badge>
                 )}
                 {job.remote_derived && (
-                  <Badge variant="secondary" className="bg-purple-100 text-purple-700 hover:bg-purple-100">
+                  <Badge variant="secondary">
                     Remote
                   </Badge>
                 )}
@@ -73,8 +73,8 @@ export default async function JobPage({ params }: JobPageProps) {
 
           {/* Salary */}
           {(job.ai_salary_minvalue || job.ai_salary_value) && (
-            <div className="mb-6 p-4 bg-green-50 rounded-lg">
-              <p className="text-lg font-semibold text-green-700">
+            <div className="mb-6 p-4 bg-muted rounded-lg">
+              <p className="text-lg font-semibold text-foreground">
                 {formatSalaryRange(
                   job.ai_salary_minvalue,
                   job.ai_salary_maxvalue,
