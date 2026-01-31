@@ -33,7 +33,7 @@ export function getFilterFields(dynamicOptions?: DynamicOptions): FilterField[] 
       key: 'domain_derived',
       label: 'Company Domain',
       type: 'multiselect',
-      operators: ['is_any_of', 'is_not_any_of', 'contains', 'not_contains', 'is_empty', 'is_not_empty'],
+      operators: ['is_any_of', 'is_not_any_of', 'contains', 'not_contains'],
       options: dynamicOptions?.domains || [],
       description: 'Filter by company website domain',
     },
