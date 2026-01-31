@@ -192,6 +192,20 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editi
         );
 
       case 'multiselect':
+        // Text search operators show a text input
+        if (selectedOperator === 'contains' || selectedOperator === 'not_contains') {
+          return (
+            <input
+              type="text"
+              value={value || ''}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder={selectedField.placeholder || `Search in ${selectedField.label.toLowerCase()}...`}
+              className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent text-foreground bg-background placeholder-muted-foreground"
+              autoFocus
+            />
+          );
+        }
+        // Selection operators show checkbox list
         return (
           <div className="space-y-2 max-h-48 overflow-y-auto border border-input rounded-lg p-3">
             {selectedField.options?.map((opt) => (
