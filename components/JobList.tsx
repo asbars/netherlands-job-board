@@ -24,14 +24,12 @@ function PaginationControls({
   totalCount,
   pageSize,
   onPageChange,
-  position = 'bottom',
 }: {
   currentPage: number;
   totalPages: number;
   totalCount: number;
   pageSize: number;
   onPageChange: (page: number) => void;
-  position?: 'top' | 'bottom';
 }) {
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, totalCount);
@@ -39,7 +37,7 @@ function PaginationControls({
   if (totalPages <= 1) return null;
 
   return (
-    <div className={`flex items-center justify-between py-3 ${position === 'bottom' ? 'border-t' : ''}`}>
+    <div className="flex items-center justify-between py-4 mt-4 border-t">
       <div className="text-sm text-muted-foreground">
         Showing {startIndex + 1}-{endIndex} of {totalCount.toLocaleString()}
       </div>
@@ -148,30 +146,19 @@ export default function JobList({ filters }: JobListProps) {
 
   return (
     <div>
-      {/* Top Pagination */}
-      <PaginationControls
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalCount={totalCount}
-        pageSize={pageSize}
-        onPageChange={handlePageChange}
-        position="top"
-      />
-
-      <div className="space-y-4 py-4">
+      <div className="space-y-4">
         {jobs.map((job) => (
           <JobCard key={job.id} job={job} />
         ))}
       </div>
 
-      {/* Bottom Pagination */}
+      {/* Pagination */}
       <PaginationControls
         currentPage={currentPage}
         totalPages={totalPages}
         totalCount={totalCount}
         pageSize={pageSize}
         onPageChange={handlePageChange}
-        position="bottom"
       />
     </div>
   );
