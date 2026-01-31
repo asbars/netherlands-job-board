@@ -11,6 +11,18 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Fields that are stored as arrays in the database
+const ARRAY_FIELDS = [
+  'cities_derived',
+  'regions_derived',
+  'employment_type',
+  'ai_benefits',
+  'ai_key_skills',
+  'ai_keywords',
+  'ai_taxonomies_a',
+  'ai_job_language',
+];
+
 /**
  * Apply filters to a Supabase query
  */
@@ -20,14 +32,25 @@ function applyFiltersToQuery(
 ): any {
   for (const filter of filters) {
     const { field, operator, value } = filter;
+    const isArrayField = ARRAY_FIELDS.includes(field);
 
     switch (operator) {
       case 'contains':
-        query = query.ilike(field, `%${value}%`);
+        if (isArrayField) {
+          // For array fields, check if array contains the exact value
+          query = query.contains(field, [value]);
+        } else {
+          query = query.ilike(field, `%${value}%`);
+        }
         break;
 
       case 'not_contains':
-        query = query.not(field, 'ilike', `%${value}%`);
+        if (isArrayField) {
+          // For array fields, check that array doesn't contain the value
+          query = query.not(field, 'cs', `{"${value}"}`);
+        } else {
+          query = query.not(field, 'ilike', `%${value}%`);
+        }
         break;
 
       case 'equals':
@@ -40,13 +63,23 @@ function applyFiltersToQuery(
 
       case 'is_any_of':
         if (Array.isArray(value) && value.length > 0) {
-          query = query.in(field, value);
+          if (isArrayField) {
+            // For array fields, check if array overlaps with any of the values
+            query = query.overlaps(field, value);
+          } else {
+            query = query.in(field, value);
+          }
         }
         break;
 
       case 'is_not_any_of':
         if (Array.isArray(value) && value.length > 0) {
-          query = query.not(field, 'in', `(${value.map((v: string) => `"${v}"`).join(',')})`);
+          if (isArrayField) {
+            // For array fields, check that array doesn't overlap with any values
+            query = query.not(field, 'ov', `{${value.join(',')}}`);
+          } else {
+            query = query.not(field, 'in', `(${value.map((v: string) => `"${v}"`).join(',')})`);
+          }
         }
         break;
 
