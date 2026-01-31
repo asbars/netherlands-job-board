@@ -5,6 +5,7 @@ import {
   formatEmploymentType,
   formatRelativeDate,
   formatSalaryRange,
+  formatWorkArrangement,
 } from '@/lib/formatters';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -63,7 +64,12 @@ export default async function JobPage({ params }: JobPageProps) {
                     {job.ai_experience_level} years experience
                   </Badge>
                 )}
-                {job.remote_derived && (
+                {job.ai_work_arrangement && (
+                  <Badge variant="secondary">
+                    {formatWorkArrangement(job.ai_work_arrangement)}
+                  </Badge>
+                )}
+                {!job.ai_work_arrangement && job.remote_derived && (
                   <Badge variant="secondary">
                     Remote
                   </Badge>
@@ -82,6 +88,16 @@ export default async function JobPage({ params }: JobPageProps) {
                   job.ai_salary_currency,
                   job.ai_salary_unittext
                 )}
+              </p>
+            </div>
+          )}
+
+          {/* Work Arrangement & Office Days */}
+          {job.ai_work_arrangement_office_days !== null && job.ai_work_arrangement_office_days !== undefined && (
+            <div className="mb-6 p-4 bg-muted rounded-lg">
+              <h2 className="text-lg font-semibold text-foreground mb-2">Work Arrangement</h2>
+              <p className="text-muted-foreground">
+                <span className="font-medium text-foreground">Office Days per Week:</span> {job.ai_work_arrangement_office_days} {job.ai_work_arrangement_office_days === 1 ? 'day' : 'days'}
               </p>
             </div>
           )}
