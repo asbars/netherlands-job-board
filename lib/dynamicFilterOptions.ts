@@ -179,12 +179,16 @@ export function generateDynamicOptions(jobs: Job[]): DynamicOptions {
 
   // Extract AI employment types from ai_employment_type array
   const aiEmploymentTypeValues = extractUniqueArrayValues(jobs, job => job.ai_employment_type);
+
+  // Filter out 'OTHER' from the list since we'll add it at the end with empty jobs
+  const nonOtherTypes = aiEmploymentTypeValues.filter(type => type.toUpperCase() !== 'OTHER');
+
   const aiEmploymentTypes = [
-    ...aiEmploymentTypeValues.map(type => ({
+    ...nonOtherTypes.map(type => ({
       value: type,
       label: formatEmploymentType(type),
     })),
-    { value: 'N/A', label: 'N/A' }, // For jobs with empty employment type (at the end)
+    { value: 'Other', label: 'Other' }, // For jobs with empty employment type OR "OTHER" (at the end)
   ];
 
   return {
