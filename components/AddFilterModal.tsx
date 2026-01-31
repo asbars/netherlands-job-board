@@ -166,21 +166,21 @@ export default function AddFilterModal({ isOpen, onClose, onAdd, onUpdate, editi
         if (selectedOperator === 'between') {
           const [min, max] = Array.isArray(value) ? value : [null, null];
           return (
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-2 items-center w-full">
               <input
                 type="number"
                 value={min || ''}
                 onChange={(e) => setValue([Number(e.target.value), max])}
                 placeholder="Min"
-                className="flex-1 px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring text-foreground bg-background placeholder-muted-foreground"
+                className="w-0 flex-1 min-w-0 px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring text-foreground bg-background placeholder-muted-foreground"
               />
-              <span className="text-muted-foreground">and</span>
+              <span className="text-muted-foreground text-sm whitespace-nowrap">and</span>
               <input
                 type="number"
                 value={max || ''}
                 onChange={(e) => setValue([min, Number(e.target.value)])}
                 placeholder="Max"
-                className="flex-1 px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring text-foreground bg-background placeholder-muted-foreground"
+                className="w-0 flex-1 min-w-0 px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring text-foreground bg-background placeholder-muted-foreground"
               />
             </div>
           );
