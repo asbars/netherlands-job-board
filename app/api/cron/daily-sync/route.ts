@@ -132,14 +132,19 @@ export async function GET(request: NextRequest) {
   }
   
   try {
-    // Fetch new jobs from Apify (last 24 hours, Netherlands only)
-    console.log('📥 Fetching new jobs from Apify...');
+    // Get query parameters for flexible timeframe and limit
+    const { searchParams } = new URL(request.url);
+    const timeframe = searchParams.get('timeframe') || '24h';
+    const limit = parseInt(searchParams.get('limit') || '1000', 10);
+
+    // Fetch new jobs from Apify (default: last 24 hours, Netherlands only)
+    console.log(`📥 Fetching new jobs from Apify (timeframe: ${timeframe}, limit: ${limit})...`);
     const jobs = await fetchNewJobsFromAPI({
-      timeframe: '24h',
+      timeframe,
       locationSearch: ['Netherlands'],
       include_ai: true,
       include_li: true,
-      limit: 1000,
+      limit,
     });
     
     console.log(`✅ Retrieved ${jobs.length} jobs from Apify`);
