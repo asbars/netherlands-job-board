@@ -4,13 +4,18 @@
  */
 
 import sanitizeHtml from 'sanitize-html';
+import { decode } from 'he';
 
 /**
  * Sanitize HTML for safe rendering in job descriptions
  * Removes scripts, event handlers, styles, and dangerous tags
+ * Decodes HTML entities if the HTML is escaped
  */
 export function sanitizeJobDescription(html: string): string {
-  return sanitizeHtml(html, {
+  // First decode HTML entities (in case HTML is escaped like &lt;p&gt;)
+  const decodedHtml = decode(html);
+
+  return sanitizeHtml(decodedHtml, {
     allowedTags: [
       'p', 'br', 'div', 'span',
       'strong', 'b', 'em', 'i', 'u', 's', 'strike',
