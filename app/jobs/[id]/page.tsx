@@ -7,6 +7,7 @@ import {
   formatSalaryRange,
   formatWorkArrangement,
 } from '@/lib/formatters';
+import { sanitizeJobDescription } from '@/lib/sanitizeHtml';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -117,14 +118,25 @@ export default async function JobPage({ params }: JobPageProps) {
           )}
 
           {/* Job Description */}
-          {job.description_text && (
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-foreground mb-3">Job Description</h2>
-              <div className="prose prose-gray max-w-none">
-                <p className="text-muted-foreground whitespace-pre-wrap">{job.description_text}</p>
-              </div>
-            </div>
-          )}
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-foreground mb-3">Job Description</h2>
+            {job.description_html ? (
+              <div
+                className="prose prose-gray dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeJobDescription(job.description_html)
+                }}
+              />
+            ) : job.description_text ? (
+              <p className="text-muted-foreground whitespace-pre-wrap">
+                {job.description_text}
+              </p>
+            ) : (
+              <p className="text-muted-foreground italic">
+                Job description was not provided.
+              </p>
+            )}
+          </div>
 
           {/* AI Summary sections */}
           {job.ai_core_responsibilities && (
