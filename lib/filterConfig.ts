@@ -134,29 +134,12 @@ export function getFilterFields(dynamicOptions?: DynamicOptions): FilterField[] 
       isSalaryField: true,
     },
     {
-      key: 'ai_salary_value',
-      label: 'Exact Salary',
-      type: 'number',
-      operators: ['greater_than', 'less_than', 'between', 'equals', 'is_empty', 'is_not_empty'],
-      placeholder: 'e.g., 65000',
-      description: 'Filter by exact salary (when no range) (requires unit selection)',
-      isSalaryField: true,
-    },
-    {
       key: 'ai_salary_currency',
       label: 'Salary Currency',
       type: 'multiselect',
       operators: ['is_any_of', 'is_not_any_of', 'contains', 'not_contains', 'is_empty', 'is_not_empty'],
       options: dynamicOptions?.salaryCurrencies || [],
       description: 'Filter by currency (EUR, USD, etc.)',
-    },
-    {
-      key: 'ai_salary_unittext',
-      label: 'Salary Unit',
-      type: 'multiselect',
-      operators: ['is_any_of', 'is_not_any_of', 'contains', 'not_contains', 'is_empty', 'is_not_empty'],
-      options: dynamicOptions?.salaryUnits || [],
-      description: 'Per hour, day, month, year',
     },
 
     // ===== BENEFITS & COMPENSATION =====
@@ -281,6 +264,6 @@ export const OPERATOR_LABELS: Record<FilterOperator, string> = {
   greater_than: 'is greater than',
   less_than: 'is less than',
   between: 'is between',
-  is_empty: 'is empty',
-  is_not_empty: 'is not empty',
+  is_empty: 'is not listed',
+  is_not_empty: 'is listed',
 };

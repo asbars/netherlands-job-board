@@ -30,7 +30,6 @@ const SPECIAL_HANDLING_FIELDS = [
   'ai_work_arrangement', // NULL values treated as Hybrid/On-site
   'ai_salary_minvalue', // Salary conversion
   'ai_salary_maxvalue', // Salary conversion
-  'ai_salary_value', // Salary conversion
 ];
 
 /**
@@ -137,7 +136,7 @@ function applyFiltersToQuery(
 async function getExchangeRatesForFilters(filters: FilterCondition[]): Promise<Record<string, number>> {
   // Find salary filters with currency
   const salaryFilters = filters.filter(f =>
-    ['ai_salary_minvalue', 'ai_salary_maxvalue', 'ai_salary_value'].includes(f.field) &&
+    ['ai_salary_minvalue', 'ai_salary_maxvalue'].includes(f.field) &&
     f.salary_currency
   );
 

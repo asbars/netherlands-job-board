@@ -20,7 +20,7 @@ interface FilterPillProps {
 
 export default function FilterPill({ filter, onRemove, onEdit, dynamicOptions }: FilterPillProps) {
   // Check if this is a salary field
-  const isSalaryField = ['ai_salary_minvalue', 'ai_salary_maxvalue', 'ai_salary_value'].includes(filter.field);
+  const isSalaryField = ['ai_salary_minvalue', 'ai_salary_maxvalue'].includes(filter.field);
 
   // Get currency symbol
   const getCurrencySymbol = (currencyCode?: string): string => {

@@ -16,7 +16,6 @@ export interface DynamicOptions {
   industries: { value: string; label: string }[];
   domains: { value: string; label: string }[];
   salaryCurrencies: { value: string; label: string }[];
-  salaryUnits: { value: string; label: string }[];
   languages: { value: string; label: string }[];
   skills: { value: string; label: string }[];
   keywords: { value: string; label: string }[];
@@ -135,13 +134,6 @@ export function generateDynamicOptions(jobs: Job[]): DynamicOptions {
     label: currency,
   }));
 
-  // Extract salary units
-  const unitValues = extractUniqueValues(jobs, job => job.ai_salary_unittext);
-  const salaryUnits = unitValues.map(unit => ({
-    value: unit,
-    label: unit,
-  }));
-
   // Extract languages
   const languageValues = extractUniqueValues(jobs, job => job.ai_job_language);
   const languages = languageValues.map(lang => ({
@@ -201,7 +193,6 @@ export function generateDynamicOptions(jobs: Job[]): DynamicOptions {
     industries,
     domains,
     salaryCurrencies,
-    salaryUnits,
     languages,
     skills,
     keywords,
@@ -227,7 +218,6 @@ export function getEmptyOptions(): DynamicOptions {
     industries: [],
     domains: [],
     salaryCurrencies: [],
-    salaryUnits: [],
     languages: [],
     skills: [],
     keywords: [],
