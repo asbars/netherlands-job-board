@@ -134,8 +134,14 @@ export async function GET(request: NextRequest) {
   try {
     // Get query parameters for flexible timeframe and limit
     const { searchParams } = new URL(request.url);
-    const timeframe = searchParams.get('timeframe') || '24h';
+    const timeframeParam = searchParams.get('timeframe') || '24h';
     const limit = parseInt(searchParams.get('limit') || '1000', 10);
+
+    // Validate timeframe (must be one of: 1h, 24h, 7d, 6m)
+    const validTimeframes = ['1h', '24h', '7d', '6m'] as const;
+    const timeframe = validTimeframes.includes(timeframeParam as any)
+      ? (timeframeParam as '1h' | '24h' | '7d' | '6m')
+      : '24h';
 
     // Fetch new jobs from Apify (default: last 24 hours, Netherlands only)
     console.log(`📥 Fetching new jobs from Apify (timeframe: ${timeframe}, limit: ${limit})...`);
