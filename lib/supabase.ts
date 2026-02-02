@@ -12,7 +12,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Fields that are stored as arrays in the database
+// Fields that are stored as arrays in the database (verified 2026-02-02)
 const ARRAY_FIELDS = [
   'cities_derived',
   'regions_derived',
