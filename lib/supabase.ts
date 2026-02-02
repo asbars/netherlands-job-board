@@ -22,7 +22,6 @@ const ARRAY_FIELDS = [
   'ai_key_skills',
   'ai_keywords',
   'ai_taxonomies_a',
-  'ai_job_language',
   'ai_education_requirements',
 ];
 
