@@ -44,7 +44,7 @@ export default function Home() {
         // Fetch total job count from database (unfiltered)
         const count = await fetchJobsCount();
         setTotalJobs(count);
-        setFilteredCount(count);
+        // Don't set filteredCount here - it will be set by the filters effect after URL filters are loaded
 
         // Fetch sample of jobs to generate filter dropdown options
         const sampleJobs = await fetchJobsSample(1000);
