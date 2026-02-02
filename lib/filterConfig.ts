@@ -200,17 +200,9 @@ export function getFilterFields(dynamicOptions?: DynamicOptions): FilterField[] 
       key: 'ai_core_responsibilities',
       label: 'Core Responsibilities',
       type: 'text',
-      operators: ['contains', 'not_contains', 'is_empty', 'is_not_empty'],
+      operators: ['contains', 'not_contains'],
       placeholder: 'Search in core responsibilities',
       description: 'AI-summarized core responsibilities',
-    },
-    {
-      key: 'ai_requirements_summary',
-      label: 'Requirements Summary',
-      type: 'text',
-      operators: ['contains', 'not_contains', 'is_empty', 'is_not_empty'],
-      placeholder: 'Search in requirements',
-      description: 'AI-summarized job requirements',
     },
     {
       key: 'ai_taxonomies_a',
