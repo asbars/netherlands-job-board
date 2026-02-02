@@ -279,6 +279,30 @@ async function fetchDatasetItems(datasetId: string): Promise<ApifyJobData[]> {
 }
 
 /**
+ * Detect language from job title based on keywords
+ */
+function detectLanguageFromTitle(title: string): string | null {
+  const dutchKeywords = [
+    'dutch-speaking',
+    'dutch speaking',
+    'dutch language',
+    'dutch speaker',
+    'dutch required',
+    'fluent dutch',
+    'native dutch',
+  ];
+
+  const lowerTitle = title.toLowerCase();
+  for (const keyword of dutchKeywords) {
+    if (lowerTitle.includes(keyword)) {
+      return 'Dutch';
+    }
+  }
+
+  return null;
+}
+
+/**
  * Transform Apify job data to our database format
  */
 export function transformApifyJobToDb(apifyJob: ApifyJobData, source: 'feed' | 'api') {
@@ -347,7 +371,7 @@ export function transformApifyJobToDb(apifyJob: ApifyJobData, source: 'feed' | '
     ai_requirements_summary: apifyJob.ai_requirements_summary,
     ai_working_hours: apifyJob.ai_working_hours,
     ai_employment_type: apifyJob.ai_employment_type,
-    ai_job_language: apifyJob.ai_job_language,
+    ai_job_language: apifyJob.ai_job_language || detectLanguageFromTitle(apifyJob.title),
     ai_visa_sponsorship: apifyJob.ai_visa_sponsorship,
     ai_hiring_manager_name: apifyJob.ai_hiring_manager_name,
     ai_hiring_manager_email_address: apifyJob.ai_hiring_manager_email_address,
