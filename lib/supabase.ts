@@ -23,6 +23,7 @@ const ARRAY_FIELDS = [
   'ai_keywords',
   'ai_taxonomies_a',
   'ai_job_language',
+  'ai_education_requirements',
 ];
 
 // Fields that require RPC function due to special handling (e.g., NULL = Hybrid/On-site, salary conversion)
