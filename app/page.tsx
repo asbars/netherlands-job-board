@@ -23,11 +23,22 @@ export default function Home() {
 
   // Load filters from URL on mount (only once)
   useEffect(() => {
-    const urlFilters = getFiltersFromUrl();
-    if (urlFilters.length > 0) {
-      setFilters(urlFilters);
+    async function loadFiltersFromUrl() {
+      const urlFilters = getFiltersFromUrl();
+      if (urlFilters.length > 0) {
+        setFilters(urlFilters);
+        // Immediately fetch filtered count to avoid showing 0 while waiting
+        try {
+          const count = await fetchJobsCount(urlFilters);
+          setFilteredCount(count);
+        } catch (error) {
+          console.error('Error fetching filtered count on load:', error);
+        }
+      }
+      setIsInitialized(true);
     }
-    setIsInitialized(true);
+
+    loadFiltersFromUrl();
   }, []);
 
   // Update URL when filters change (after initialization)
