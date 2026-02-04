@@ -5,8 +5,18 @@
 
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { auth } from '@clerk/nextjs/server';
 
 export async function GET() {
+  // Verify authentication (defense in depth - middleware also checks this)
+  const { userId } = await auth();
+
+  if (!userId) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
   try {
     // 1. Get the most recent Apify run
     const { data: lastRun, error: runError } = await supabase
