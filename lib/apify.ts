@@ -40,11 +40,13 @@ export async function fetchNewJobsFromAPI(config: ApifyRunConfig = {}): Promise<
   try {
     // Build the input object (only include defined search parameters)
     const input: Record<string, any> = {
-      timeframe,
+      timeRange: timeframe, // Apify expects 'timeRange', not 'timeframe'
       limit,
       includeAi: include_ai,
       includeLinkedIn: include_li,
       descriptionType: 'html',
+      populateAiRemoteLocation: true,
+      populateAiRemoteLocationDerived: true,
     };
     
     if (locationSearch && locationSearch.length > 0) {
@@ -116,6 +118,8 @@ export async function fetchAllJobsFromFeed(config: ApifyRunConfig = {}): Promise
       includeAi: include_ai,
       includeLinkedIn: include_li,
       descriptionType: 'html',
+      populateAiRemoteLocation: true,
+      populateAiRemoteLocationDerived: true,
     };
 
     if (locationSearch && locationSearch.length > 0) {
