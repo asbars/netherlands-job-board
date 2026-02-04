@@ -75,6 +75,12 @@ export const clerkAppearance: Appearance = {
  * UserButton-specific appearance for consistent styling across app
  */
 export const userButtonAppearance: Appearance = {
+  variables: {
+    colorPrimary: 'hsl(0 0% 9%)', // --primary (black, not purple)
+    colorText: 'hsl(0 0% 3.9%)', // --foreground
+    colorTextSecondary: 'hsl(0 0% 45.1%)', // --muted-foreground
+    borderRadius: '0.5rem',
+  },
   elements: {
     avatarBox: 'w-10 h-10 rounded-full ring-2 ring-border hover:ring-primary/20 transition-all',
     userButtonPopoverCard: 'bg-card border border-border shadow-lg rounded-lg',
