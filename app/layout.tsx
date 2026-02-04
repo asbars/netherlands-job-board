@@ -21,8 +21,6 @@ export default function RootLayout({
     <ClerkProvider
       afterSignInUrl="/"
       afterSignUpUrl="/"
-      signInUrl="/sign-in"
-      signUpUrl="/sign-up"
     >
       <html lang="en" suppressHydrationWarning>
         <body className={inter.className}>

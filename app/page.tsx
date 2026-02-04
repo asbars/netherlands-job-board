@@ -13,8 +13,7 @@ import { fetchJobsCount, fetchJobsSample, countJobsWithOfficeDays } from '@/lib/
 import { generateDynamicOptions, DynamicOptions, getEmptyOptions } from '@/lib/dynamicFilterOptions';
 import { getFiltersFromUrl, updateUrlWithFilters } from '@/lib/filterUrl';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
-import Link from 'next/link';
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 
 export default function Home() {
   const [filters, setFilters] = useState<FilterCondition[]>([]);
@@ -107,12 +106,11 @@ export default function Home() {
           <div className="flex gap-4 items-center">
             <ThemeToggle />
             <SignedOut>
-              <Link
-                href="/sign-in"
-                className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-              >
-                Sign In
-              </Link>
+              <SignInButton mode="modal">
+                <button className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
+                  Sign In
+                </button>
+              </SignInButton>
             </SignedOut>
             <SignedIn>
               <UserButton
