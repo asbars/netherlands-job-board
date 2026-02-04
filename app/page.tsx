@@ -14,6 +14,7 @@ import { generateDynamicOptions, DynamicOptions, getEmptyOptions } from '@/lib/d
 import { getFiltersFromUrl, updateUrlWithFilters } from '@/lib/filterUrl';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
+import { clerkAppearance, userButtonAppearance } from '@/lib/clerk-appearance';
 
 export default function Home() {
   const [filters, setFilters] = useState<FilterCondition[]>([]);
@@ -106,22 +107,14 @@ export default function Home() {
           <div className="flex gap-4 items-center">
             <ThemeToggle />
             <SignedOut>
-              <SignInButton mode="modal">
-                <button className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
+              <SignInButton mode="modal" appearance={clerkAppearance}>
+                <button className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
                   Sign In
                 </button>
               </SignInButton>
             </SignedOut>
             <SignedIn>
-              <UserButton
-                appearance={{
-                  elements: {
-                    avatarBox: 'w-10 h-10',
-                    userButtonPopoverCard: 'bg-card border border-border shadow-lg',
-                    userButtonPopoverActionButton: 'hover:bg-secondary',
-                  },
-                }}
-              />
+              <UserButton appearance={userButtonAppearance} />
             </SignedIn>
           </div>
         </header>

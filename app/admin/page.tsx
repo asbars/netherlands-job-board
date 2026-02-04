@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { UserButton } from '@clerk/nextjs';
+import { userButtonAppearance } from '@/lib/clerk-appearance';
 
 interface AdminStats {
   lastApifyRun: {
@@ -90,15 +91,7 @@ export default function AdminPage() {
             >
               Back to Jobs
             </a>
-            <UserButton
-              appearance={{
-                elements: {
-                  avatarBox: 'w-10 h-10',
-                  userButtonPopoverCard: 'bg-card border border-border shadow-lg',
-                  userButtonPopoverActionButton: 'hover:bg-secondary',
-                },
-              }}
-            />
+            <UserButton appearance={userButtonAppearance} />
           </div>
         </div>
 
