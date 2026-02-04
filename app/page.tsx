@@ -13,6 +13,8 @@ import { fetchJobsCount, fetchJobsSample, countJobsWithOfficeDays } from '@/lib/
 import { generateDynamicOptions, DynamicOptions, getEmptyOptions } from '@/lib/dynamicFilterOptions';
 import { getFiltersFromUrl, updateUrlWithFilters } from '@/lib/filterUrl';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
+import Link from 'next/link';
 
 export default function Home() {
   const [filters, setFilters] = useState<FilterCondition[]>([]);
@@ -102,7 +104,28 @@ export default function Home() {
               Find your dream job in the Netherlands with advanced filtering and notification
             </p>
           </div>
-          <ThemeToggle />
+          <div className="flex gap-4 items-center">
+            <ThemeToggle />
+            <SignedOut>
+              <Link
+                href="/sign-in"
+                className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+              >
+                Sign In
+              </Link>
+            </SignedOut>
+            <SignedIn>
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: 'w-10 h-10',
+                    userButtonPopoverCard: 'bg-card border border-border shadow-lg',
+                    userButtonPopoverActionButton: 'hover:bg-secondary',
+                  },
+                }}
+              />
+            </SignedIn>
+          </div>
         </header>
 
         <div className="flex flex-col lg:flex-row gap-6">
