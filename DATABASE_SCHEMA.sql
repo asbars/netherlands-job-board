@@ -78,7 +78,7 @@ CREATE TABLE jobmarket_jobs (
   -- AI Job Classification
   ai_experience_level TEXT,                       -- 0-2, 2-5, 5-10, 10+
   ai_work_arrangement TEXT,                       -- Remote Solely/Remote OK/Hybrid/On-site
-  ai_work_arrangement_office_days INTEGER,
+  ai_work_arrangement_office_days BIGINT,
   ai_remote_location TEXT[],
   ai_remote_location_derived TEXT[],
   
@@ -91,7 +91,7 @@ CREATE TABLE jobmarket_jobs (
   -- AI Job Details
   ai_core_responsibilities TEXT,                  -- 2-sentence summary
   ai_requirements_summary TEXT,                   -- 2-sentence summary
-  ai_working_hours INTEGER DEFAULT 40,
+  ai_working_hours BIGINT DEFAULT 40,
   ai_employment_type TEXT[],
   ai_job_language TEXT,
   ai_visa_sponsorship BOOLEAN,
