@@ -7,21 +7,29 @@
 
 import { useState, useEffect } from 'react';
 import { FilterCondition } from '@/types/filters';
+import { SavedFilter } from '@/types/savedFilters';
 import MetabaseStyleFilters from '@/components/MetabaseStyleFilters';
+import SaveFilterModal from '@/components/SaveFilterModal';
 import JobList from '@/components/JobList';
 import { fetchJobsCount, fetchJobsSample, countJobsWithOfficeDays } from '@/lib/supabase';
 import { generateDynamicOptions, DynamicOptions, getEmptyOptions } from '@/lib/dynamicFilterOptions';
 import { getFiltersFromUrl, updateUrlWithFilters } from '@/lib/filterUrl';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
+import { SignedIn, SignedOut, SignInButton, UserButton, useAuth } from '@clerk/nextjs';
 import { clerkAppearance, userButtonAppearance } from '@/lib/clerk-appearance';
 
+const MAX_SAVED_FILTERS = 25;
+
 export default function Home() {
+  const { isSignedIn } = useAuth();
   const [filters, setFilters] = useState<FilterCondition[]>([]);
   const [totalJobs, setTotalJobs] = useState(0);
   const [filteredCount, setFilteredCount] = useState(0);
   const [dynamicOptions, setDynamicOptions] = useState<DynamicOptions>(getEmptyOptions());
   const [isInitialized, setIsInitialized] = useState(false);
+  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([]);
+  const [isLoadingSavedFilters, setIsLoadingSavedFilters] = useState(false);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
   // Load filters from URL on mount (only once)
   useEffect(() => {
@@ -91,6 +99,100 @@ export default function Home() {
     updateFilteredCount();
   }, [filters]);
 
+  // Fetch saved filters when user signs in
+  useEffect(() => {
+    if (isSignedIn) {
+      fetchSavedFilters();
+    } else {
+      setSavedFilters([]);
+    }
+  }, [isSignedIn]);
+
+  // Fetch saved filters from API
+  async function fetchSavedFilters() {
+    setIsLoadingSavedFilters(true);
+    try {
+      const response = await fetch('/api/saved-filters');
+      if (response.ok) {
+        const data = await response.json();
+        setSavedFilters(data);
+      } else {
+        console.error('Failed to fetch saved filters');
+      }
+    } catch (error) {
+      console.error('Error fetching saved filters:', error);
+    } finally {
+      setIsLoadingSavedFilters(false);
+    }
+  }
+
+  // Handle saving a new filter
+  async function handleSaveFilter(name: string) {
+    try {
+      const response = await fetch('/api/saved-filters', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, filters }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to save filter');
+      }
+
+      const newFilter = await response.json();
+      setSavedFilters((prev) => [newFilter, ...prev]);
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
+  // Handle renaming a saved filter
+  async function handleRenameSavedFilter(id: number, name: string) {
+    try {
+      const response = await fetch(`/api/saved-filters/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to rename filter');
+      }
+
+      const updatedFilter = await response.json();
+      setSavedFilters((prev) =>
+        prev.map((f) => (f.id === id ? updatedFilter : f))
+      );
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
+  // Handle deleting a saved filter
+  async function handleDeleteSavedFilter(id: number) {
+    try {
+      const response = await fetch(`/api/saved-filters/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete filter');
+      }
+
+      setSavedFilters((prev) => prev.filter((f) => f.id !== id));
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
+  // Handle applying a saved filter
+  function handleApplySavedFilter(filterConditions: FilterCondition[]) {
+    setFilters(filterConditions);
+  }
+
   return (
     <main className="min-h-screen">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -128,6 +230,13 @@ export default function Home() {
               resultCount={filteredCount}
               totalCount={totalJobs}
               dynamicOptions={dynamicOptions}
+              isSignedIn={isSignedIn}
+              onSaveFilter={() => setIsSaveModalOpen(true)}
+              savedFilters={savedFilters}
+              onApplySavedFilter={handleApplySavedFilter}
+              onRenameSavedFilter={handleRenameSavedFilter}
+              onDeleteSavedFilter={handleDeleteSavedFilter}
+              isLoadingSavedFilters={isLoadingSavedFilters}
             />
           </aside>
 
@@ -137,6 +246,15 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Save Filter Modal */}
+      <SaveFilterModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        onSave={handleSaveFilter}
+        currentCount={savedFilters.length}
+        maxCount={MAX_SAVED_FILTERS}
+      />
     </main>
   );
 }

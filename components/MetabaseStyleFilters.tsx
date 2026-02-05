@@ -7,8 +7,10 @@
 
 import { useState } from 'react';
 import { FilterCondition } from '@/types/filters';
+import { SavedFilter } from '@/types/savedFilters';
 import FilterPill from './FilterPill';
 import AddFilterModal from './AddFilterModal';
+import SavedFiltersSection from './SavedFiltersSection';
 import { getFilterDescription } from '@/lib/filterEngine';
 import { DynamicOptions } from '@/lib/dynamicFilterOptions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +22,13 @@ interface MetabaseStyleFiltersProps {
   resultCount: number;
   totalCount: number;
   dynamicOptions?: DynamicOptions;
+  isSignedIn?: boolean;
+  onSaveFilter?: () => void;
+  savedFilters?: SavedFilter[];
+  onApplySavedFilter?: (filters: FilterCondition[]) => void;
+  onRenameSavedFilter?: (id: number, name: string) => Promise<void>;
+  onDeleteSavedFilter?: (id: number) => Promise<void>;
+  isLoadingSavedFilters?: boolean;
 }
 
 export default function MetabaseStyleFilters({
@@ -28,6 +37,13 @@ export default function MetabaseStyleFilters({
   resultCount,
   totalCount,
   dynamicOptions,
+  isSignedIn = false,
+  onSaveFilter,
+  savedFilters = [],
+  onApplySavedFilter,
+  onRenameSavedFilter,
+  onDeleteSavedFilter,
+  isLoadingSavedFilters = false,
 }: MetabaseStyleFiltersProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFilter, setEditingFilter] = useState<FilterCondition | null>(null);
@@ -59,25 +75,37 @@ export default function MetabaseStyleFilters({
   };
 
   return (
-    <Card>
-      {/* Header */}
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Filters</CardTitle>
-            <p className="text-xs text-muted-foreground mt-0.5">{getFilterDescription(filters)}</p>
+    <>
+      <Card>
+        {/* Header */}
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Filters</CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">{getFilterDescription(filters)}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {isSignedIn && filters.length > 0 && onSaveFilter && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onSaveFilter}
+                >
+                  Save
+                </Button>
+              )}
+              {filters.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearAll}
+                >
+                  Clear all
+                </Button>
+              )}
+            </div>
           </div>
-          {filters.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClearAll}
-            >
-              Clear all
-            </Button>
-          )}
-        </div>
-      </CardHeader>
+        </CardHeader>
 
       {/* Filter Pills */}
       <CardContent className="pb-4">
@@ -142,6 +170,19 @@ export default function MetabaseStyleFilters({
         dynamicOptions={dynamicOptions}
       />
     </Card>
+
+    {/* Saved Filters Section */}
+    {isSignedIn && onApplySavedFilter && onRenameSavedFilter && onDeleteSavedFilter && (
+      <SavedFiltersSection
+        savedFilters={savedFilters}
+        onApply={onApplySavedFilter}
+        onRename={onRenameSavedFilter}
+        onDelete={onDeleteSavedFilter}
+        isLoading={isLoadingSavedFilters}
+        dynamicOptions={dynamicOptions}
+      />
+    )}
+    </>
   );
 }
 

@@ -233,12 +233,29 @@ CREATE INDEX idx_jobmarket_apify_usage_logs_actor ON jobmarket_apify_usage_logs(
 CREATE INDEX idx_jobmarket_apify_usage_logs_run_status ON jobmarket_apify_usage_logs(run_status);
 
 -- ============================================
+-- USER SAVED FILTERS TABLE
+-- ============================================
+
+CREATE TABLE jobmarket_user_saved_filters (
+  id BIGSERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  filters JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  CONSTRAINT unique_user_filter_name UNIQUE (user_id, name)
+);
+
+CREATE INDEX idx_saved_filters_user_id ON jobmarket_user_saved_filters(user_id);
+
+-- ============================================
 -- ROW LEVEL SECURITY (RLS)
 -- ============================================
 
 ALTER TABLE jobmarket_jobs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE jobmarket_user_job_alerts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE jobmarket_apify_usage_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE jobmarket_user_saved_filters ENABLE ROW LEVEL SECURITY;
 
 -- Public read access for jobs
 CREATE POLICY "Allow public read access to active jobs" ON jobmarket_jobs
