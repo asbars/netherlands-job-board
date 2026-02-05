@@ -34,11 +34,12 @@ export default function SavedFilterItem({
   const [isRenaming, setIsRenaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleApply = () => {
+  const handleToggleExpand = () => {
     setIsExpanded(!isExpanded);
-    if (!isExpanded) {
-      onApply(filter.filters);
-    }
+  };
+
+  const handleApplyFilter = () => {
+    onApply(filter.filters);
   };
 
   const handleRename = async () => {
@@ -127,37 +128,45 @@ export default function SavedFilterItem({
       {/* Header */}
       <div className="group flex items-center justify-between p-3 bg-muted/50 hover:bg-muted transition-colors">
         <div className="flex items-center gap-2 flex-1 min-w-0">
+          {/* Chevron button - only toggles expand/collapse */}
           <button
-            onClick={handleApply}
-            className="flex items-center gap-2 flex-1 min-w-0 text-left"
+            onClick={handleToggleExpand}
+            className="flex-shrink-0 p-1 hover:bg-muted-foreground/10 rounded transition-colors"
             disabled={isDeleting}
+            aria-label={isExpanded ? "Collapse" : "Expand"}
           >
             <svg
-              className={`w-4 h-4 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+              className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-            {isEditing ? (
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onBlur={handleRename}
-                className="flex-1 min-w-0 px-2 py-1 text-sm bg-background border border-input rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                autoFocus
-                disabled={isRenaming}
-                onClick={(e) => e.stopPropagation()}
-              />
-            ) : (
-              <span className="flex-1 min-w-0 text-sm font-medium truncate">
-                {filter.name}
-              </span>
-            )}
           </button>
+
+          {/* Filter name - applies filter when clicked */}
+          {isEditing ? (
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={handleRename}
+              className="flex-1 min-w-0 px-2 py-1 text-sm bg-background border border-input rounded focus:outline-none focus:ring-2 focus:ring-primary"
+              autoFocus
+              disabled={isRenaming}
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <button
+              onClick={handleApplyFilter}
+              className="flex-1 min-w-0 text-left text-sm font-medium truncate hover:text-primary transition-colors"
+              disabled={isDeleting}
+            >
+              {filter.name}
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-1 flex-shrink-0">
