@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { clerkClient } from '@clerk/nextjs/server';
 
 // Define which routes require authentication
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
@@ -20,19 +21,17 @@ export default clerkMiddleware(async (auth, req) => {
       return NextResponse.redirect(signInUrl);
     }
 
-    // Check if user's email matches the allowed admin email
-    // Clerk stores email in different places depending on the version
-    const claims = sessionClaims as any;
-    const userEmail =
-      claims?.email ||
-      claims?.email_addresses?.[0]?.email_address ||
-      claims?.primaryEmailAddress?.emailAddress;
+    // Fetch the full user object to get email address
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    const userEmail = user.emailAddresses.find(
+      (email) => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
 
     console.log('🔍 Admin check:', {
       userEmail,
       expectedEmail: ADMIN_EMAIL,
       userId,
-      sessionClaimsKeys: Object.keys(sessionClaims || {}),
     });
 
     if (userEmail !== ADMIN_EMAIL) {
