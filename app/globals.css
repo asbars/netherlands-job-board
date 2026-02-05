@@ -74,15 +74,17 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* Subtle dot pattern background */
-    background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px);
-    background-size: 20px 20px;
+    /* Subtle dot pattern background - Railway style */
+    background-image: radial-gradient(circle, rgba(0, 0, 0, 0.15) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: 0 0;
   }
 
   .dark body {
-    /* More visible dots in dark mode */
-    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-    background-size: 20px 20px;
+    /* More visible dots in dark mode - Railway style */
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: 0 0;
   }
 }
 
