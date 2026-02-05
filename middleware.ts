@@ -22,10 +22,11 @@ export default clerkMiddleware(async (auth, req) => {
 
     // Check if user's email matches the allowed admin email
     // Clerk stores email in different places depending on the version
+    const claims = sessionClaims as any;
     const userEmail =
-      (sessionClaims?.email as string | undefined) ||
-      (sessionClaims?.email_addresses?.[0]?.email_address as string | undefined) ||
-      (sessionClaims?.primaryEmailAddress?.emailAddress as string | undefined);
+      claims?.email ||
+      claims?.email_addresses?.[0]?.email_address ||
+      claims?.primaryEmailAddress?.emailAddress;
 
     console.log('🔍 Admin check:', {
       userEmail,
