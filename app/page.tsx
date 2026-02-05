@@ -199,10 +199,10 @@ export default function Home() {
         {/* Header */}
         <header className="mb-8 flex items-start justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">
+            <h1 className="text-4xl font-bold text-foreground mb-2 bg-background px-3 py-2 w-fit rounded-md">
               Netherlands Job Opportunities
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground bg-background px-3 py-1.5 w-fit rounded-md">
               Find your dream job in the Netherlands with advanced filtering and notifications
             </p>
           </div>
