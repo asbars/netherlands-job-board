@@ -92,7 +92,7 @@ export default function Home() {
   }, [filters]);
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <header className="mb-8 flex items-start justify-between">
