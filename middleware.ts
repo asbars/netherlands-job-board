@@ -21,12 +21,26 @@ export default clerkMiddleware(async (auth, req) => {
     }
 
     // Check if user's email matches the allowed admin email
-    const userEmail = sessionClaims?.email as string | undefined;
+    // Clerk stores email in different places depending on the version
+    const userEmail =
+      (sessionClaims?.email as string | undefined) ||
+      (sessionClaims?.email_addresses?.[0]?.email_address as string | undefined) ||
+      (sessionClaims?.primaryEmailAddress?.emailAddress as string | undefined);
+
+    console.log('🔍 Admin check:', {
+      userEmail,
+      expectedEmail: ADMIN_EMAIL,
+      userId,
+      sessionClaimsKeys: Object.keys(sessionClaims || {}),
+    });
 
     if (userEmail !== ADMIN_EMAIL) {
       // User is authenticated but not authorized
       return NextResponse.json(
-        { error: 'Unauthorized: Admin access only' },
+        {
+          error: 'Unauthorized: Admin access only',
+          debug: { userEmail, expectedEmail: ADMIN_EMAIL }
+        },
         { status: 403 }
       );
     }
