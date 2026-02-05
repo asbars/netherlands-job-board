@@ -38,7 +38,7 @@ function PaginationControls({
 
   return (
     <div className="flex items-center justify-between py-4 mt-4 border-t">
-      <div className="text-sm text-muted-foreground">
+      <div className="text-sm text-muted-foreground bg-background px-3 py-1.5 rounded-md w-fit">
         Showing {startIndex + 1}-{endIndex} of {totalCount.toLocaleString()}
       </div>
       <div className="flex items-center gap-2">
@@ -50,7 +50,7 @@ function PaginationControls({
         >
           Previous
         </Button>
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm text-muted-foreground bg-background px-3 py-1.5 rounded-md">
           Page {currentPage} of {totalPages.toLocaleString()}
         </span>
         <Button
