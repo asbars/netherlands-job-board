@@ -101,7 +101,7 @@ export default function Home() {
               Netherlands Job Opportunities
             </h1>
             <p className="text-muted-foreground">
-              Find your dream job in the Netherlands with advanced filtering and notification
+              Find your dream job in the Netherlands with advanced filtering and notifications
             </p>
           </div>
           <div className="flex gap-4 items-center">
