@@ -74,6 +74,15 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Subtle dot pattern background */
+    background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .dark body {
+    /* More visible dots in dark mode */
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
   }
 }
 
