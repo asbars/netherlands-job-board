@@ -125,7 +125,7 @@ export default function SavedFilterItem({
   return (
     <div className="border border-border rounded-md overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 bg-muted/50 hover:bg-muted transition-colors">
+      <div className="group flex items-center justify-between p-3 bg-muted/50 hover:bg-muted transition-colors">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <button
             onClick={handleApply}
@@ -170,7 +170,7 @@ export default function SavedFilterItem({
                 setIsEditing(true);
               }}
               disabled={isDeleting}
-              className="h-7 px-2"
+              className="h-7 px-2 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -182,7 +182,7 @@ export default function SavedFilterItem({
             size="sm"
             onClick={handleDelete}
             disabled={isDeleting}
-            className="h-7 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950"
+            className="h-7 px-2 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity"
           >
             {isDeleting ? (
               <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
