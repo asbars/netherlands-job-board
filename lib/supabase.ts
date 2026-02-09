@@ -347,7 +347,8 @@ export async function fetchJobsPaginated(
   query = applyFiltersToQuery(query, filters);
 
   const { data, error, count } = await query
-    .order('first_seen_date', { ascending: false })
+    .order('date_posted', { ascending: false, nullsFirst: false })
+    .order('id', { ascending: false })
     .range(from, to);
 
   if (error) {
