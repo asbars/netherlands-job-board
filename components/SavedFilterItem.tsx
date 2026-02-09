@@ -14,9 +14,10 @@ import { DynamicOptions } from '@/lib/dynamicFilterOptions';
 
 interface SavedFilterItemProps {
   filter: SavedFilter;
-  onApply: (filters: FilterCondition[]) => void;
+  onApply: (filters: FilterCondition[], filterId: number) => void;
   onRename: (id: number, name: string) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
+  onToggleNotifications: (id: number, enabled: boolean) => Promise<void>;
   dynamicOptions?: DynamicOptions;
 }
 
@@ -25,6 +26,7 @@ export default function SavedFilterItem({
   onApply,
   onRename,
   onDelete,
+  onToggleNotifications,
   dynamicOptions,
 }: SavedFilterItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -32,6 +34,7 @@ export default function SavedFilterItem({
   const [editName, setEditName] = useState(filter.name);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
+  const [isTogglingNotifications, setIsTogglingNotifications] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleToggleExpand = () => {
@@ -39,7 +42,21 @@ export default function SavedFilterItem({
   };
 
   const handleApplyFilter = () => {
-    onApply(filter.filters);
+    onApply(filter.filters, filter.id);
+  };
+
+  const handleToggleNotifications = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsTogglingNotifications(true);
+    setError(null);
+
+    try {
+      await onToggleNotifications(filter.id, !filter.notifications_enabled);
+    } catch (err: any) {
+      setError(err.message || 'Failed to toggle notifications');
+    } finally {
+      setIsTogglingNotifications(false);
+    }
   };
 
   const handleRename = async () => {
@@ -161,15 +178,56 @@ export default function SavedFilterItem({
           ) : (
             <button
               onClick={handleApplyFilter}
-              className="flex-1 min-w-0 text-left text-sm font-medium truncate hover:text-primary transition-colors"
+              className="flex-1 min-w-0 text-left text-sm font-medium truncate hover:text-primary transition-colors flex items-center gap-2"
               disabled={isDeleting}
             >
-              {filter.name}
+              <span className="truncate">{filter.name}</span>
+              {/* New job count badge */}
+              {filter.new_job_count !== undefined && filter.new_job_count > 0 && (
+                <span
+                  className={`inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-xs font-medium rounded-full flex-shrink-0 ${
+                    filter.notifications_enabled
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  {filter.new_job_count}
+                </span>
+              )}
             </button>
           )}
         </div>
 
         <div className="flex items-center gap-1 flex-shrink-0">
+          {/* Bell toggle - notifications */}
+          {!isEditing && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleToggleNotifications}
+              disabled={isDeleting || isTogglingNotifications}
+              className="h-7 px-2 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity"
+              title={filter.notifications_enabled ? 'Disable notifications' : 'Enable notifications'}
+            >
+              {isTogglingNotifications ? (
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+              ) : filter.notifications_enabled ? (
+                // Filled bell icon when notifications enabled
+                <svg className="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+                </svg>
+              ) : (
+                // Outline bell icon when notifications disabled
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              )}
+            </Button>
+          )}
+          {/* Edit button */}
           {!isEditing && (
             <Button
               variant="ghost"
@@ -186,6 +244,7 @@ export default function SavedFilterItem({
               </svg>
             </Button>
           )}
+          {/* Delete button */}
           <Button
             variant="ghost"
             size="sm"

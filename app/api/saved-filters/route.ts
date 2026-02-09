@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin, countNewJobsForFilter } from '@/lib/supabase';
+import { FilterCondition } from '@/types/filters';
 
 const MAX_SAVED_FILTERS = 25;
 
 /**
  * GET /api/saved-filters
- * List all saved filters for the current user
+ * List all saved filters for the current user, with new job counts
  */
 export async function GET() {
   try {
@@ -27,7 +28,34 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch saved filters' }, { status: 500 });
     }
 
-    return NextResponse.json(data || []);
+    if (!data || data.length === 0) {
+      return NextResponse.json([]);
+    }
+
+    // Calculate new job counts for each filter
+    const filtersWithCounts = await Promise.all(
+      data.map(async (filter) => {
+        try {
+          const filterConditions = filter.filters as FilterCondition[];
+          const newJobCount = await countNewJobsForFilter(
+            filterConditions,
+            filter.last_checked_at
+          );
+          return {
+            ...filter,
+            new_job_count: newJobCount,
+          };
+        } catch (err) {
+          console.error(`Error counting new jobs for filter ${filter.id}:`, err);
+          return {
+            ...filter,
+            new_job_count: 0,
+          };
+        }
+      })
+    );
+
+    return NextResponse.json(filtersWithCounts);
   } catch (error) {
     console.error('Error in GET /api/saved-filters:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

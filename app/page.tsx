@@ -188,9 +188,48 @@ export default function Home() {
     }
   }
 
-  // Handle applying a saved filter
-  function handleApplySavedFilter(filterConditions: FilterCondition[]) {
+  // Handle applying a saved filter and mark it as checked
+  async function handleApplySavedFilter(filterConditions: FilterCondition[], filterId: number) {
     setFilters(filterConditions);
+
+    // Mark filter as checked to reset new job count
+    try {
+      await fetch(`/api/saved-filters/${filterId}/mark-checked`, {
+        method: 'POST',
+      });
+
+      // Update local state to reset new_job_count to 0
+      setSavedFilters((prev) =>
+        prev.map((f) =>
+          f.id === filterId ? { ...f, new_job_count: 0, last_checked_at: new Date().toISOString() } : f
+        )
+      );
+    } catch (error) {
+      console.error('Error marking filter as checked:', error);
+    }
+  }
+
+  // Handle toggling notifications for a saved filter
+  async function handleToggleNotifications(id: number, enabled: boolean) {
+    try {
+      const response = await fetch(`/api/saved-filters/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notifications_enabled: enabled }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to toggle notifications');
+      }
+
+      const updatedFilter = await response.json();
+      setSavedFilters((prev) =>
+        prev.map((f) => (f.id === id ? { ...f, notifications_enabled: updatedFilter.notifications_enabled } : f))
+      );
+    } catch (error: any) {
+      throw error;
+    }
   }
 
   return (
@@ -236,6 +275,7 @@ export default function Home() {
               onApplySavedFilter={handleApplySavedFilter}
               onRenameSavedFilter={handleRenameSavedFilter}
               onDeleteSavedFilter={handleDeleteSavedFilter}
+              onToggleNotifications={handleToggleNotifications}
               isLoadingSavedFilters={isLoadingSavedFilters}
             />
           </aside>

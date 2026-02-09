@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 /**
  * PATCH /api/saved-filters/[id]
- * Rename a saved filter
+ * Update a saved filter (name and/or notifications_enabled)
  */
 export async function PATCH(
   request: Request,
@@ -18,16 +18,30 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { name } = body;
+    const { name, notifications_enabled } = body;
 
-    if (!name) {
-      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+    // Must provide at least one field to update
+    if (name === undefined && notifications_enabled === undefined) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+    }
+
+    // Build update object
+    const updateData: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (name !== undefined) {
+      updateData.name = name;
+    }
+
+    if (notifications_enabled !== undefined) {
+      updateData.notifications_enabled = notifications_enabled;
     }
 
     // Update the filter (only if it belongs to the user)
     const { data, error } = await supabaseAdmin
       .from('jobmarket_user_saved_filters')
-      .update({ name, updated_at: new Date().toISOString() })
+      .update(updateData)
       .eq('id', params.id)
       .eq('user_id', userId)
       .select()

@@ -434,3 +434,69 @@ export async function incrementJobViewCount(id: number): Promise<void> {
     console.error('Error incrementing view count:', error);
   }
 }
+
+/**
+ * Count new jobs matching filter criteria since a given date
+ * Used for saved filter notifications
+ */
+export async function countNewJobsForFilter(
+  filters: FilterCondition[],
+  sinceDate: string
+): Promise<number> {
+  // Add date filter: first_seen_date > sinceDate
+  const dateFilter: FilterCondition = {
+    id: 'new_jobs_date_filter',
+    field: 'first_seen_date',
+    fieldLabel: 'First Seen Date',
+    operator: 'greater_than',
+    value: sinceDate,
+  };
+  const filtersWithDate: FilterCondition[] = [...filters, dateFilter];
+
+  // Use RPC function if we have any array field or special handling filters
+  if (requiresRpcSearch(filters)) {
+    const filtersJson = filtersWithDate.map((f) => ({
+      field: f.field,
+      operator: f.operator,
+      value: f.value,
+      is_array_value: Array.isArray(f.value),
+      ...(f.salary_period && { salary_period: f.salary_period }),
+      ...(f.salary_currency && { salary_currency: f.salary_currency }),
+    }));
+
+    // Get exchange rates if we have salary filters
+    const exchangeRates = await getExchangeRatesForFilters(filters);
+
+    const { data, error } = await supabase.rpc('search_jobs_with_filters', {
+      p_filters: filtersJson,
+      p_page: 1,
+      p_page_size: 1,
+      p_exchange_rates: exchangeRates,
+    });
+
+    if (error) {
+      console.error('Error counting new jobs via RPC:', error);
+      return 0;
+    }
+
+    return Number(data?.[0]?.total_count) || 0;
+  }
+
+  // Use regular query for non-array text filters
+  let query = supabase
+    .from('jobmarket_jobs')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'active')
+    .gt('first_seen_date', sinceDate);
+
+  query = applyFiltersToQuery(query, filters);
+
+  const { count, error } = await query;
+
+  if (error) {
+    console.error('Error counting new jobs:', error);
+    return 0;
+  }
+
+  return count || 0;
+}

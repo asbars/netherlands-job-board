@@ -13,9 +13,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface SavedFiltersSectionProps {
   savedFilters: SavedFilter[];
-  onApply: (filters: FilterCondition[]) => void;
+  onApply: (filters: FilterCondition[], filterId: number) => void;
   onRename: (id: number, name: string) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
+  onToggleNotifications: (id: number, enabled: boolean) => Promise<void>;
   isLoading?: boolean;
   dynamicOptions?: DynamicOptions;
 }
@@ -25,6 +26,7 @@ export default function SavedFiltersSection({
   onApply,
   onRename,
   onDelete,
+  onToggleNotifications,
   isLoading,
   dynamicOptions,
 }: SavedFiltersSectionProps) {
@@ -60,6 +62,7 @@ export default function SavedFiltersSection({
             onApply={onApply}
             onRename={onRename}
             onDelete={onDelete}
+            onToggleNotifications={onToggleNotifications}
             dynamicOptions={dynamicOptions}
           />
         ))}

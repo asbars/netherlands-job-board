@@ -243,10 +243,18 @@ CREATE TABLE jobmarket_user_saved_filters (
   filters JSONB NOT NULL,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
+
+  -- Notification settings
+  notifications_enabled BOOLEAN NOT NULL DEFAULT false, -- Controls badge styling (colored vs greyed)
+  last_checked_at TIMESTAMPTZ DEFAULT now(),            -- When user last applied filter (for counting new jobs)
+  notification_email TEXT,                              -- For future email notifications (nullable)
+  notification_frequency TEXT CHECK (notification_frequency IN ('instant', 'daily', 'weekly')), -- For future email notifications
+
   CONSTRAINT unique_user_filter_name UNIQUE (user_id, name)
 );
 
 CREATE INDEX idx_saved_filters_user_id ON jobmarket_user_saved_filters(user_id);
+CREATE INDEX idx_saved_filters_last_checked ON jobmarket_user_saved_filters(last_checked_at);
 
 -- ============================================
 -- ROW LEVEL SECURITY (RLS)

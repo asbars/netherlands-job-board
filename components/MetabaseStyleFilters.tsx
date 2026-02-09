@@ -25,9 +25,10 @@ interface MetabaseStyleFiltersProps {
   isSignedIn?: boolean;
   onSaveFilter?: () => void;
   savedFilters?: SavedFilter[];
-  onApplySavedFilter?: (filters: FilterCondition[]) => void;
+  onApplySavedFilter?: (filters: FilterCondition[], filterId: number) => void;
   onRenameSavedFilter?: (id: number, name: string) => Promise<void>;
   onDeleteSavedFilter?: (id: number) => Promise<void>;
+  onToggleNotifications?: (id: number, enabled: boolean) => Promise<void>;
   isLoadingSavedFilters?: boolean;
 }
 
@@ -43,6 +44,7 @@ export default function MetabaseStyleFilters({
   onApplySavedFilter,
   onRenameSavedFilter,
   onDeleteSavedFilter,
+  onToggleNotifications,
   isLoadingSavedFilters = false,
 }: MetabaseStyleFiltersProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -172,12 +174,13 @@ export default function MetabaseStyleFilters({
     </Card>
 
     {/* Saved Filters Section */}
-    {isSignedIn && onApplySavedFilter && onRenameSavedFilter && onDeleteSavedFilter && (
+    {isSignedIn && onApplySavedFilter && onRenameSavedFilter && onDeleteSavedFilter && onToggleNotifications && (
       <SavedFiltersSection
         savedFilters={savedFilters}
         onApply={onApplySavedFilter}
         onRename={onRenameSavedFilter}
         onDelete={onDeleteSavedFilter}
+        onToggleNotifications={onToggleNotifications}
         isLoading={isLoadingSavedFilters}
         dynamicOptions={dynamicOptions}
       />
