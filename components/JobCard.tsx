@@ -19,12 +19,13 @@ interface JobCardProps {
 }
 
 export default function JobCard({ job, isFavorited, onToggleFavorite, isSignedIn, savedFilterLastChecked }: JobCardProps) {
-  // Determine if job is "new" (posted after the saved filter was last checked)
+  // Determine if job is "new" (added to database after the saved filter was last checked)
+  // We use first_seen_date because that's when the job appeared in our system,
+  // not date_posted which is when the employer posted it (could be days earlier)
   const isNewJob = (() => {
     if (!savedFilterLastChecked) return false;
-    const jobDate = job.date_posted || job.first_seen_date;
-    if (!jobDate) return false;
-    return new Date(jobDate) > new Date(savedFilterLastChecked);
+    if (!job.first_seen_date) return false;
+    return new Date(job.first_seen_date) > new Date(savedFilterLastChecked);
   })();
   return (
     <Card className="hover:shadow-md transition-shadow duration-200">
