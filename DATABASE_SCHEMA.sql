@@ -257,6 +257,21 @@ CREATE INDEX idx_saved_filters_user_id ON jobmarket_user_saved_filters(user_id);
 CREATE INDEX idx_saved_filters_last_checked ON jobmarket_user_saved_filters(last_checked_at);
 
 -- ============================================
+-- USER FAVORITES TABLE
+-- ============================================
+
+CREATE TABLE jobmarket_user_favorites (
+  id BIGSERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  job_id BIGINT NOT NULL REFERENCES jobmarket_jobs(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  CONSTRAINT unique_user_job_favorite UNIQUE (user_id, job_id)
+);
+
+CREATE INDEX idx_favorites_user_id ON jobmarket_user_favorites(user_id);
+CREATE INDEX idx_favorites_job_id ON jobmarket_user_favorites(job_id);
+
+-- ============================================
 -- ROW LEVEL SECURITY (RLS)
 -- ============================================
 
@@ -264,6 +279,7 @@ ALTER TABLE jobmarket_jobs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE jobmarket_user_job_alerts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE jobmarket_apify_usage_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE jobmarket_user_saved_filters ENABLE ROW LEVEL SECURITY;
+ALTER TABLE jobmarket_user_favorites ENABLE ROW LEVEL SECURITY;
 
 -- Public read access for jobs
 CREATE POLICY "Allow public read access to active jobs" ON jobmarket_jobs

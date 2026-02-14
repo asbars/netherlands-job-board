@@ -11,6 +11,8 @@ import { FilterCondition } from '@/types/filters';
 import { fetchJobsPaginated } from '@/lib/supabase';
 import JobCard from './JobCard';
 import { Button } from '@/components/ui/button';
+import { useFavorites } from '@/contexts/FavoritesContext';
+import { useAuth } from '@clerk/nextjs';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -67,6 +69,8 @@ function PaginationControls({
 }
 
 export default function JobList({ filters }: JobListProps) {
+  const { isSignedIn } = useAuth();
+  const { isFavorited, toggleFavorite } = useFavorites();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -149,7 +153,13 @@ export default function JobList({ filters }: JobListProps) {
     <div>
       <div className="space-y-4">
         {jobs.map((job) => (
-          <JobCard key={job.id} job={job} />
+          <JobCard
+            key={job.id}
+            job={job}
+            isFavorited={isFavorited(job.id)}
+            onToggleFavorite={toggleFavorite}
+            isSignedIn={isSignedIn}
+          />
         ))}
       </div>
 
