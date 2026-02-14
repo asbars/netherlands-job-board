@@ -54,6 +54,8 @@ function HomeContent() {
   const [isLoadingSavedFilters, setIsLoadingSavedFilters] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [showingFavorites, setShowingFavorites] = useState(false);
+  // Track saved filter context for "New" badges - stores last_checked_at before it was updated
+  const [savedFilterLastChecked, setSavedFilterLastChecked] = useState<string | null>(null);
 
   // Load filters from URL on mount (only once)
   useEffect(() => {
@@ -214,6 +216,14 @@ function HomeContent() {
 
   // Handle applying a saved filter and mark it as checked
   async function handleApplySavedFilter(filterConditions: FilterCondition[], filterId: number) {
+    // Find the filter to get its last_checked_at before updating
+    const savedFilter = savedFilters.find((f) => f.id === filterId);
+    if (savedFilter?.last_checked_at) {
+      setSavedFilterLastChecked(savedFilter.last_checked_at);
+    } else {
+      setSavedFilterLastChecked(null);
+    }
+
     setFilters(filterConditions);
 
     // Mark filter as checked to reset new job count
@@ -231,6 +241,12 @@ function HomeContent() {
     } catch (error) {
       console.error('Error marking filter as checked:', error);
     }
+  }
+
+  // Clear saved filter context when filters change manually
+  function handleFiltersChange(newFilters: FilterCondition[]) {
+    setSavedFilterLastChecked(null);
+    setFilters(newFilters);
   }
 
   // Handle toggling notifications for a saved filter
@@ -295,7 +311,7 @@ function HomeContent() {
           <aside className="w-full lg:w-96 flex-shrink-0">
             <MetabaseStyleFilters
               filters={filters}
-              onFiltersChange={setFilters}
+              onFiltersChange={handleFiltersChange}
               resultCount={filteredCount}
               totalCount={totalJobs}
               dynamicOptions={dynamicOptions}
@@ -313,7 +329,11 @@ function HomeContent() {
 
           {/* Right content - Job listings */}
           <div className="flex-1 min-w-0">
-            <JobList filters={filters} showFavorites={showingFavorites} />
+            <JobList
+              filters={filters}
+              showFavorites={showingFavorites}
+              savedFilterLastChecked={savedFilterLastChecked}
+            />
           </div>
         </div>
       </div>

@@ -20,6 +20,7 @@ const DEFAULT_PAGE_SIZE = 20;
 interface JobListProps {
   filters: FilterCondition[];
   showFavorites?: boolean;
+  savedFilterLastChecked?: string | null;
 }
 
 function PaginationControls({
@@ -70,7 +71,7 @@ function PaginationControls({
   );
 }
 
-export default function JobList({ filters, showFavorites = false }: JobListProps) {
+export default function JobList({ filters, showFavorites = false, savedFilterLastChecked }: JobListProps) {
   const { isSignedIn } = useAuth();
   const { isFavorited, toggleFavorite, favoriteIds } = useFavorites();
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -212,6 +213,7 @@ export default function JobList({ filters, showFavorites = false }: JobListProps
             isFavorited={isFavorited(job.id)}
             onToggleFavorite={toggleFavorite}
             isSignedIn={isSignedIn}
+            savedFilterLastChecked={savedFilterLastChecked}
           />
         ))}
       </div>

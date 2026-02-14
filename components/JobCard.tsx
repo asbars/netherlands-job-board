@@ -15,9 +15,17 @@ interface JobCardProps {
   isFavorited?: boolean;
   onToggleFavorite?: (jobId: number) => void;
   isSignedIn?: boolean;
+  savedFilterLastChecked?: string | null;
 }
 
-export default function JobCard({ job, isFavorited, onToggleFavorite, isSignedIn }: JobCardProps) {
+export default function JobCard({ job, isFavorited, onToggleFavorite, isSignedIn, savedFilterLastChecked }: JobCardProps) {
+  // Determine if job is "new" (posted after the saved filter was last checked)
+  const isNewJob = (() => {
+    if (!savedFilterLastChecked) return false;
+    const jobDate = job.date_posted || job.first_seen_date;
+    if (!jobDate) return false;
+    return new Date(jobDate) > new Date(savedFilterLastChecked);
+  })();
   return (
     <Card className="hover:shadow-md transition-shadow duration-200">
       <CardContent className="p-6">
@@ -65,6 +73,11 @@ export default function JobCard({ job, isFavorited, onToggleFavorite, isSignedIn
             </div>
           </div>
           <div className="text-right text-sm text-muted-foreground ml-4 flex items-center gap-2">
+            {isNewJob && (
+              <Badge className="bg-green-500 hover:bg-green-500 text-white text-xs px-1.5 py-0.5">
+                New
+              </Badge>
+            )}
             {isSignedIn && onToggleFavorite && (
               <button
                 onClick={(e) => {
