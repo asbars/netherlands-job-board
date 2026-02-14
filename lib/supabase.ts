@@ -329,8 +329,19 @@ export async function fetchJobsPaginated(
     }
 
     const result = data?.[0];
+    const jobs = result?.jobs || [];
+
+    // Debug: Log first 5 jobs with dates to verify sorting
+    if (jobs.length > 0) {
+      console.log('RPC query - First 5 jobs order:', jobs.slice(0, 5).map((j: any) => ({
+        id: j.id,
+        title: j.title?.substring(0, 30),
+        date_posted: j.date_posted
+      })));
+    }
+
     return {
-      jobs: result?.jobs || [],
+      jobs,
       totalCount: Number(result?.total_count) || 0,
     };
   }
@@ -354,6 +365,15 @@ export async function fetchJobsPaginated(
   if (error) {
     console.error('Error fetching paginated jobs:', error);
     throw error;
+  }
+
+  // Debug: Log first 5 jobs with dates to verify sorting
+  if (data && data.length > 0) {
+    console.log('Regular query - First 5 jobs order:', data.slice(0, 5).map((j: any) => ({
+      id: j.id,
+      title: j.title?.substring(0, 30),
+      date_posted: j.date_posted
+    })));
   }
 
   return {
