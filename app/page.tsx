@@ -17,29 +17,29 @@ import { getFiltersFromUrl, updateUrlWithFilters } from '@/lib/filterUrl';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { SignedIn, SignedOut, SignInButton, UserButton, useAuth } from '@clerk/nextjs';
 import { clerkAppearance, userButtonAppearance } from '@/lib/clerk-appearance';
-import { FavoritesProvider, useFavorites } from '@/contexts/FavoritesContext';
-import Link from 'next/link';
+import { FavoritesProvider } from '@/contexts/FavoritesContext';
 
 const MAX_SAVED_FILTERS = 25;
 
-function FavoritesButton() {
-  const { favoritesCount } = useFavorites();
-
+function FavoritesButton({ isActive, onClick }: { isActive: boolean; onClick: () => void }) {
   return (
-    <Link
-      href="/favorites"
-      className="relative p-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
-      aria-label="View favorites"
+    <button
+      onClick={onClick}
+      className={`p-2 rounded-md bg-background hover:bg-accent hover:text-accent-foreground transition-colors ${
+        isActive ? 'text-red-500' : ''
+      }`}
+      aria-label={isActive ? 'Show all jobs' : 'View favorites'}
     >
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-      </svg>
-      {favoritesCount > 0 && (
-        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-medium rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-          {favoritesCount > 99 ? '99+' : favoritesCount}
-        </span>
+      {isActive ? (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+        </svg>
+      ) : (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        </svg>
       )}
-    </Link>
+    </button>
   );
 }
 
@@ -53,6 +53,7 @@ function HomeContent() {
   const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([]);
   const [isLoadingSavedFilters, setIsLoadingSavedFilters] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [showingFavorites, setShowingFavorites] = useState(false);
 
   // Load filters from URL on mount (only once)
   useEffect(() => {
@@ -270,7 +271,10 @@ function HomeContent() {
           </div>
           <div className="flex gap-4 items-center">
             <SignedIn>
-              <FavoritesButton />
+              <FavoritesButton
+                isActive={showingFavorites}
+                onClick={() => setShowingFavorites(!showingFavorites)}
+              />
             </SignedIn>
             <ThemeToggle />
             <SignedOut>
@@ -303,12 +307,13 @@ function HomeContent() {
               onDeleteSavedFilter={handleDeleteSavedFilter}
               onToggleNotifications={handleToggleNotifications}
               isLoadingSavedFilters={isLoadingSavedFilters}
+              disabled={showingFavorites}
             />
           </aside>
 
           {/* Right content - Job listings */}
           <div className="flex-1 min-w-0">
-            <JobList filters={filters} />
+            <JobList filters={filters} showFavorites={showingFavorites} />
           </div>
         </div>
       </div>

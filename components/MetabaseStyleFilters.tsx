@@ -30,6 +30,7 @@ interface MetabaseStyleFiltersProps {
   onDeleteSavedFilter?: (id: number) => Promise<void>;
   onToggleNotifications?: (id: number, enabled: boolean) => Promise<void>;
   isLoadingSavedFilters?: boolean;
+  disabled?: boolean;
 }
 
 export default function MetabaseStyleFilters({
@@ -46,6 +47,7 @@ export default function MetabaseStyleFilters({
   onDeleteSavedFilter,
   onToggleNotifications,
   isLoadingSavedFilters = false,
+  disabled = false,
 }: MetabaseStyleFiltersProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFilter, setEditingFilter] = useState<FilterCondition | null>(null);
@@ -78,12 +80,14 @@ export default function MetabaseStyleFilters({
 
   return (
     <>
-      <Card>
+      <Card className={disabled ? 'opacity-50 pointer-events-none' : ''}>
         {/* Header */}
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Filters</CardTitle>
+              <CardTitle className={disabled ? 'text-muted-foreground' : ''}>
+                {disabled ? 'Filters (viewing favorites)' : 'Filters'}
+              </CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">{getFilterDescription(filters)}</p>
             </div>
             <div className="flex items-center gap-2">
@@ -183,6 +187,7 @@ export default function MetabaseStyleFilters({
         onToggleNotifications={onToggleNotifications}
         isLoading={isLoadingSavedFilters}
         dynamicOptions={dynamicOptions}
+        disabled={disabled}
       />
     )}
     </>

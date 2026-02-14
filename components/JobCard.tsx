@@ -72,8 +72,10 @@ export default function JobCard({ job, isFavorited, onToggleFavorite, isSignedIn
                   e.stopPropagation();
                   onToggleFavorite(job.id);
                 }}
-                className={`p-1.5 rounded-full transition-colors hover:bg-muted ${
-                  isFavorited ? 'text-red-500' : 'text-muted-foreground hover:text-red-500'
+                className={`p-1.5 rounded-full transition-all hover:bg-muted ${
+                  isFavorited
+                    ? 'text-red-500 opacity-100'
+                    : 'text-muted-foreground/30 hover:text-red-500 hover:opacity-100'
                 }`}
                 aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
               >

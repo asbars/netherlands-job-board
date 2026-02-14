@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { Job } from '@/types/job';
 import { FilterCondition } from '@/types/filters';
+import { FavoriteJob } from '@/types/favorites';
 import { fetchJobsPaginated } from '@/lib/supabase';
 import JobCard from './JobCard';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ const DEFAULT_PAGE_SIZE = 20;
 
 interface JobListProps {
   filters: FilterCondition[];
+  showFavorites?: boolean;
 }
 
 function PaginationControls({
@@ -68,9 +70,9 @@ function PaginationControls({
   );
 }
 
-export default function JobList({ filters }: JobListProps) {
+export default function JobList({ filters, showFavorites = false }: JobListProps) {
   const { isSignedIn } = useAuth();
-  const { isFavorited, toggleFavorite } = useFavorites();
+  const { isFavorited, toggleFavorite, favoriteIds } = useFavorites();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -78,15 +80,53 @@ export default function JobList({ filters }: JobListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(DEFAULT_PAGE_SIZE);
 
-  // Fetch jobs when page or filters change
+  // Fetch jobs when page or filters change, or when switching to/from favorites view
   useEffect(() => {
     async function loadJobs() {
       try {
         setLoading(true);
         setError(null);
-        const result = await fetchJobsPaginated(currentPage, pageSize, filters);
-        setJobs(result.jobs);
-        setTotalCount(result.totalCount);
+
+        if (showFavorites) {
+          // Fetch favorite jobs
+          const favResponse = await fetch('/api/favorites');
+          if (!favResponse.ok) {
+            throw new Error('Failed to fetch favorites');
+          }
+          const favorites: FavoriteJob[] = await favResponse.json();
+
+          if (favorites.length === 0) {
+            setJobs([]);
+            setTotalCount(0);
+            return;
+          }
+
+          // Fetch job details for each favorite
+          const jobPromises = favorites.map(async (f) => {
+            const response = await fetch(`/api/jobs/${f.job_id}`);
+            if (response.ok) {
+              return response.json();
+            }
+            return null;
+          });
+
+          const jobResults = await Promise.all(jobPromises);
+          const validJobs = jobResults.filter((job): job is Job => job !== null);
+
+          // Sort by when they were favorited (most recent first)
+          const jobsMap = new Map(validJobs.map((job) => [job.id, job]));
+          const orderedJobs = favorites
+            .map((f) => jobsMap.get(f.job_id))
+            .filter((job): job is Job => job !== undefined);
+
+          setJobs(orderedJobs);
+          setTotalCount(orderedJobs.length);
+        } else {
+          // Fetch filtered jobs
+          const result = await fetchJobsPaginated(currentPage, pageSize, filters);
+          setJobs(result.jobs);
+          setTotalCount(result.totalCount);
+        }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
         setError(`Failed to load jobs: ${errorMessage}`);
@@ -97,12 +137,12 @@ export default function JobList({ filters }: JobListProps) {
     }
 
     loadJobs();
-  }, [currentPage, pageSize, filters]);
+  }, [currentPage, pageSize, filters, showFavorites, favoriteIds.size]);
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters change or when toggling favorites view
   useEffect(() => {
     setCurrentPage(1);
-  }, [filters]);
+  }, [filters, showFavorites]);
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -136,6 +176,19 @@ export default function JobList({ filters }: JobListProps) {
   }
 
   if (totalCount === 0) {
+    if (showFavorites) {
+      return (
+        <div className="bg-muted border rounded-lg p-12 text-center">
+          <svg className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+          <p className="text-foreground text-lg font-medium mb-2">No favorites yet</p>
+          <p className="text-muted-foreground text-sm">
+            Click the heart icon on any job to add it to your favorites.
+          </p>
+        </div>
+      );
+    }
     return (
       <div className="bg-muted border rounded-lg p-12 text-center">
         <svg className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

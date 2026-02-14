@@ -19,6 +19,7 @@ interface SavedFiltersSectionProps {
   onToggleNotifications: (id: number, enabled: boolean) => Promise<void>;
   isLoading?: boolean;
   dynamicOptions?: DynamicOptions;
+  disabled?: boolean;
 }
 
 export default function SavedFiltersSection({
@@ -29,6 +30,7 @@ export default function SavedFiltersSection({
   onToggleNotifications,
   isLoading,
   dynamicOptions,
+  disabled = false,
 }: SavedFiltersSectionProps) {
   if (isLoading) {
     return (
@@ -50,9 +52,9 @@ export default function SavedFiltersSection({
   }
 
   return (
-    <Card className="mt-4">
+    <Card className={`mt-4 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Saved Filters</CardTitle>
+        <CardTitle className={`text-base ${disabled ? 'text-muted-foreground' : ''}`}>Saved Filters</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         {savedFilters.map((filter) => (
