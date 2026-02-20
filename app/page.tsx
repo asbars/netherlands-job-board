@@ -20,6 +20,43 @@ import { clerkAppearance, userButtonAppearance } from '@/lib/clerk-appearance';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 
 const MAX_SAVED_FILTERS = 25;
+const SAVED_FILTER_CONTEXT_KEY = 'savedFilterNewJobsContext';
+const NEW_BADGE_DURATION_MS = 12 * 60 * 60 * 1000; // 12 hours
+
+interface SavedFilterContext {
+  filterId: number;
+  lastCheckedAt: string;
+  expiresAt: number;
+}
+
+function saveSavedFilterContext(filterId: number, lastCheckedAt: string) {
+  const context: SavedFilterContext = {
+    filterId,
+    lastCheckedAt,
+    expiresAt: Date.now() + NEW_BADGE_DURATION_MS,
+  };
+  localStorage.setItem(SAVED_FILTER_CONTEXT_KEY, JSON.stringify(context));
+}
+
+function loadSavedFilterContext(): SavedFilterContext | null {
+  try {
+    const stored = localStorage.getItem(SAVED_FILTER_CONTEXT_KEY);
+    if (!stored) return null;
+    const context: SavedFilterContext = JSON.parse(stored);
+    // Check if expired
+    if (Date.now() > context.expiresAt) {
+      localStorage.removeItem(SAVED_FILTER_CONTEXT_KEY);
+      return null;
+    }
+    return context;
+  } catch {
+    return null;
+  }
+}
+
+function clearSavedFilterContext() {
+  localStorage.removeItem(SAVED_FILTER_CONTEXT_KEY);
+}
 
 function FavoritesButton({ isActive, onClick }: { isActive: boolean; onClick: () => void }) {
   return (
@@ -57,7 +94,7 @@ function HomeContent() {
   // Track saved filter context for "New" badges - stores last_checked_at before it was updated
   const [savedFilterLastChecked, setSavedFilterLastChecked] = useState<string | null>(null);
 
-  // Load filters from URL on mount (only once)
+  // Load filters from URL on mount and restore saved filter context
   useEffect(() => {
     async function loadFiltersFromUrl() {
       const urlFilters = getFiltersFromUrl();
@@ -71,6 +108,13 @@ function HomeContent() {
           console.error('Error fetching filtered count on load:', error);
         }
       }
+
+      // Restore saved filter context from localStorage if valid
+      const storedContext = loadSavedFilterContext();
+      if (storedContext) {
+        setSavedFilterLastChecked(storedContext.lastCheckedAt);
+      }
+
       setIsInitialized(true);
     }
 
@@ -220,8 +264,11 @@ function HomeContent() {
     const savedFilter = savedFilters.find((f) => f.id === filterId);
     if (savedFilter?.last_checked_at) {
       setSavedFilterLastChecked(savedFilter.last_checked_at);
+      // Store in localStorage so it persists across page refreshes for 12 hours
+      saveSavedFilterContext(filterId, savedFilter.last_checked_at);
     } else {
       setSavedFilterLastChecked(null);
+      clearSavedFilterContext();
     }
 
     setFilters(filterConditions);
@@ -246,6 +293,7 @@ function HomeContent() {
   // Clear saved filter context when filters change manually
   function handleFiltersChange(newFilters: FilterCondition[]) {
     setSavedFilterLastChecked(null);
+    clearSavedFilterContext();
     setFilters(newFilters);
   }
 
