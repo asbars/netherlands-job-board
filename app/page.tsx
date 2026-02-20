@@ -285,7 +285,7 @@ function HomeContent() {
               Find your dream job in the Netherlands with advanced filtering and notifications
             </p>
           </div>
-          <div className="flex gap-4 items-center">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-end sm:items-center">
             <SignedIn>
               <FavoritesButton
                 isActive={showingFavorites}
