@@ -206,7 +206,7 @@ export default function SavedFilterItem({
               size="sm"
               onClick={handleToggleNotifications}
               disabled={isDeleting || isTogglingNotifications}
-              className="h-7 px-2 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity"
+              className="h-7 px-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
               title={filter.notifications_enabled ? 'Disable notifications' : 'Enable notifications'}
             >
               {isTogglingNotifications ? (
@@ -237,7 +237,7 @@ export default function SavedFilterItem({
                 setIsEditing(true);
               }}
               disabled={isDeleting}
-              className="h-7 px-2 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity"
+              className="h-7 px-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -250,7 +250,7 @@ export default function SavedFilterItem({
             size="sm"
             onClick={handleDelete}
             disabled={isDeleting}
-            className="h-7 px-2 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity"
+            className="h-7 px-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
           >
             {isDeleting ? (
               <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
