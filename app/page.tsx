@@ -29,7 +29,8 @@ interface SavedFilterContext {
   expiresAt: number;
 }
 
-function saveSavedFilterContext(filterId: number, lastCheckedAt: string) {
+// localStorage functions (fallback for when server-side storage fails or user not signed in)
+function saveSavedFilterContextLocal(filterId: number, lastCheckedAt: string) {
   const context: SavedFilterContext = {
     filterId,
     lastCheckedAt,
@@ -38,7 +39,7 @@ function saveSavedFilterContext(filterId: number, lastCheckedAt: string) {
   localStorage.setItem(SAVED_FILTER_CONTEXT_KEY, JSON.stringify(context));
 }
 
-function loadSavedFilterContext(): SavedFilterContext | null {
+function loadSavedFilterContextLocal(): SavedFilterContext | null {
   try {
     const stored = localStorage.getItem(SAVED_FILTER_CONTEXT_KEY);
     if (!stored) return null;
@@ -54,8 +55,29 @@ function loadSavedFilterContext(): SavedFilterContext | null {
   }
 }
 
-function clearSavedFilterContext() {
+function clearSavedFilterContextLocal() {
   localStorage.removeItem(SAVED_FILTER_CONTEXT_KEY);
+}
+
+// Server-side context functions
+async function fetchFilterContextFromServer(): Promise<{ viewingSince: string } | null> {
+  try {
+    const response = await fetch('/api/filter-context');
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!data) return null;
+    return { viewingSince: data.viewing_since };
+  } catch {
+    return null;
+  }
+}
+
+async function clearFilterContextOnServer(): Promise<void> {
+  try {
+    await fetch('/api/filter-context', { method: 'DELETE' });
+  } catch {
+    // Silently fail, localStorage will be cleared anyway
+  }
 }
 
 function FavoritesButton({ isActive, onClick }: { isActive: boolean; onClick: () => void }) {
@@ -109,8 +131,18 @@ function HomeContent() {
         }
       }
 
-      // Restore saved filter context from localStorage if valid
-      const storedContext = loadSavedFilterContext();
+      // Restore saved filter context - try server first (for cross-device), then localStorage (fallback)
+      if (isSignedIn) {
+        const serverContext = await fetchFilterContextFromServer();
+        if (serverContext) {
+          setSavedFilterLastChecked(serverContext.viewingSince);
+          setIsInitialized(true);
+          return;
+        }
+      }
+
+      // Fallback to localStorage
+      const storedContext = loadSavedFilterContextLocal();
       if (storedContext) {
         setSavedFilterLastChecked(storedContext.lastCheckedAt);
       }
@@ -119,7 +151,7 @@ function HomeContent() {
     }
 
     loadFiltersFromUrl();
-  }, []);
+  }, [isSignedIn]);
 
   // Update URL when filters change (after initialization)
   useEffect(() => {
@@ -264,16 +296,16 @@ function HomeContent() {
     const savedFilter = savedFilters.find((f) => f.id === filterId);
     if (savedFilter?.last_checked_at) {
       setSavedFilterLastChecked(savedFilter.last_checked_at);
-      // Store in localStorage so it persists across page refreshes for 12 hours
-      saveSavedFilterContext(filterId, savedFilter.last_checked_at);
+      // Store in localStorage as fallback (server-side is handled by mark-checked API)
+      saveSavedFilterContextLocal(filterId, savedFilter.last_checked_at);
     } else {
       setSavedFilterLastChecked(null);
-      clearSavedFilterContext();
+      clearSavedFilterContextLocal();
     }
 
     setFilters(filterConditions);
 
-    // Mark filter as checked to reset new job count
+    // Mark filter as checked to reset new job count (also stores context on server)
     try {
       await fetch(`/api/saved-filters/${filterId}/mark-checked`, {
         method: 'POST',
@@ -293,7 +325,11 @@ function HomeContent() {
   // Clear saved filter context when filters change manually
   function handleFiltersChange(newFilters: FilterCondition[]) {
     setSavedFilterLastChecked(null);
-    clearSavedFilterContext();
+    clearSavedFilterContextLocal();
+    // Clear server-side context too (fire and forget)
+    if (isSignedIn) {
+      clearFilterContextOnServer();
+    }
     setFilters(newFilters);
   }
 
