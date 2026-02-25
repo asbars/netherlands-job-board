@@ -305,18 +305,30 @@ function HomeContent() {
 
     setFilters(filterConditions);
 
-    // Mark filter as checked to reset new job count (also stores context on server)
+    // Mark filter as checked (also stores context and badge snapshot on server)
     try {
-      await fetch(`/api/saved-filters/${filterId}/mark-checked`, {
+      const response = await fetch(`/api/saved-filters/${filterId}/mark-checked`, {
         method: 'POST',
       });
 
-      // Update local state to reset new_job_count to 0
-      setSavedFilters((prev) =>
-        prev.map((f) =>
-          f.id === filterId ? { ...f, new_job_count: 0, last_checked_at: new Date().toISOString() } : f
-        )
-      );
+      if (response.ok) {
+        const result = await response.json();
+        // Update local state with the snapshotted badge count (persists for 12 hours)
+        setSavedFilters((prev) =>
+          prev.map((f) =>
+            f.id === filterId
+              ? {
+                  ...f,
+                  // Keep the badge count (now snapshotted on server)
+                  new_job_count: result.badge_count_snapshot ?? f.new_job_count,
+                  last_checked_at: result.last_checked_at,
+                  badge_count_snapshot: result.badge_count_snapshot,
+                  badge_count_expires_at: result.badge_count_expires_at,
+                }
+              : f
+          )
+        );
+      }
     } catch (error) {
       console.error('Error marking filter as checked:', error);
     }

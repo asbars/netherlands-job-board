@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin, countNewJobsForFilter } from '@/lib/supabase';
+import { FilterCondition } from '@/types/filters';
 
 const CONTEXT_DURATION_HOURS = 12;
 
@@ -8,6 +9,7 @@ const CONTEXT_DURATION_HOURS = 12;
  * POST /api/saved-filters/[id]/mark-checked
  * Update last_checked_at timestamp when user applies filter
  * Also stores the viewing context for cross-device "New" badge persistence
+ * And snapshots the badge count for 12-hour persistence
  */
 export async function POST(
   request: Request,
@@ -22,10 +24,10 @@ export async function POST(
 
     const filterId = parseInt(params.id, 10);
 
-    // First, get the current filter to capture last_checked_at before updating
+    // First, get the current filter to capture last_checked_at and filters before updating
     const { data: currentFilter, error: fetchError } = await supabaseAdmin
       .from('jobmarket_user_saved_filters')
-      .select('last_checked_at')
+      .select('last_checked_at, filters')
       .eq('id', filterId)
       .eq('user_id', userId)
       .single();
@@ -38,6 +40,19 @@ export async function POST(
     const previousLastChecked = currentFilter.last_checked_at;
     const now = new Date();
     const expiresAt = new Date(now.getTime() + CONTEXT_DURATION_HOURS * 60 * 60 * 1000);
+
+    // Calculate the current new job count BEFORE updating last_checked_at
+    // This will be snapshotted so the badge persists for 12 hours
+    let badgeCountSnapshot = 0;
+    if (previousLastChecked) {
+      try {
+        const filterConditions = currentFilter.filters as FilterCondition[];
+        badgeCountSnapshot = await countNewJobsForFilter(filterConditions, previousLastChecked);
+      } catch (err) {
+        console.error('Error calculating badge snapshot:', err);
+        // Continue with 0 if calculation fails
+      }
+    }
 
     // Store the viewing context for cross-device "New" badge persistence
     // Use upsert to handle both insert and update cases
@@ -60,10 +75,14 @@ export async function POST(
       }
     }
 
-    // Update last_checked_at to current timestamp
+    // Update last_checked_at and store badge snapshot
     const { data, error } = await supabaseAdmin
       .from('jobmarket_user_saved_filters')
-      .update({ last_checked_at: now.toISOString() })
+      .update({
+        last_checked_at: now.toISOString(),
+        badge_count_snapshot: badgeCountSnapshot,
+        badge_count_expires_at: expiresAt.toISOString(),
+      })
       .eq('id', filterId)
       .eq('user_id', userId)
       .select()
@@ -82,6 +101,8 @@ export async function POST(
       success: true,
       last_checked_at: data.last_checked_at,
       viewing_since: previousLastChecked,
+      badge_count_snapshot: badgeCountSnapshot,
+      badge_count_expires_at: expiresAt.toISOString(),
     });
   } catch (error) {
     console.error('Error in POST /api/saved-filters/[id]/mark-checked:', error);

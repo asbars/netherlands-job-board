@@ -33,9 +33,26 @@ export async function GET() {
     }
 
     // Calculate new job counts for each filter
+    // Use badge_count_snapshot if not expired (for 12-hour persistence)
+    const now = new Date();
     const filtersWithCounts = await Promise.all(
       data.map(async (filter) => {
         try {
+          // Check if we have a valid (non-expired) badge snapshot
+          const hasValidSnapshot =
+            filter.badge_count_snapshot !== null &&
+            filter.badge_count_expires_at &&
+            new Date(filter.badge_count_expires_at) > now;
+
+          if (hasValidSnapshot) {
+            // Use the snapshotted count
+            return {
+              ...filter,
+              new_job_count: filter.badge_count_snapshot,
+            };
+          }
+
+          // No valid snapshot - calculate the live count
           const filterConditions = filter.filters as FilterCondition[];
           const newJobCount = await countNewJobsForFilter(
             filterConditions,
