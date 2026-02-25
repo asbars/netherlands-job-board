@@ -4,6 +4,35 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { useAuth } from '@clerk/nextjs';
 import { FavoriteJob } from '@/types/favorites';
 
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 500;
+
+// Helper to delay execution
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Helper to fetch with retry logic for handling stale connections after inactivity
+async function fetchWithRetry<T>(
+  fetchFn: () => Promise<T>,
+  retries: number = MAX_RETRIES
+): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fetchFn();
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+
+      if (attempt < retries) {
+        console.warn(`Fetch attempt ${attempt + 1} failed, retrying...`, err);
+        await delay(RETRY_DELAY_MS * (attempt + 1));
+      }
+    }
+  }
+
+  throw lastError;
+}
+
 interface FavoritesContextType {
   favoriteIds: Set<number>;
   isLoading: boolean;
@@ -32,11 +61,14 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   async function fetchFavorites() {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/favorites');
-      if (response.ok) {
-        const data: FavoriteJob[] = await response.json();
-        setFavoriteIds(new Set(data.map((f) => f.job_id)));
-      }
+      const data = await fetchWithRetry(async () => {
+        const response = await fetch('/api/favorites');
+        if (!response.ok) {
+          throw new Error('Failed to fetch favorites');
+        }
+        return response.json() as Promise<FavoriteJob[]>;
+      });
+      setFavoriteIds(new Set(data.map((f) => f.job_id)));
     } catch (error) {
       console.error('Error fetching favorites:', error);
     } finally {

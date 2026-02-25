@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Job } from '@/types/job';
 import { FilterCondition } from '@/types/filters';
 import { FavoriteJob } from '@/types/favorites';
@@ -16,6 +16,35 @@ import { useFavorites } from '@/contexts/FavoritesContext';
 import { useAuth } from '@clerk/nextjs';
 
 const DEFAULT_PAGE_SIZE = 20;
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 500;
+
+// Helper to delay execution
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Helper to fetch with retry logic for handling stale connections after inactivity
+async function fetchWithRetry<T>(
+  fetchFn: () => Promise<T>,
+  retries: number = MAX_RETRIES
+): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fetchFn();
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+
+      // Don't retry on last attempt
+      if (attempt < retries) {
+        console.warn(`Fetch attempt ${attempt + 1} failed, retrying...`, err);
+        await delay(RETRY_DELAY_MS * (attempt + 1)); // Exponential backoff
+      }
+    }
+  }
+
+  throw lastError;
+}
 
 interface JobListProps {
   filters: FilterCondition[];
@@ -81,64 +110,69 @@ export default function JobList({ filters, showFavorites = false, savedFilterLas
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(DEFAULT_PAGE_SIZE);
 
-  // Fetch jobs when page or filters change, or when switching to/from favorites view
-  useEffect(() => {
-    async function loadJobs() {
-      try {
-        setLoading(true);
-        setError(null);
+  // Load jobs function - extracted so it can be called for retry
+  const loadJobs = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        if (showFavorites) {
-          // Fetch favorite jobs
+      if (showFavorites) {
+        // Fetch favorite jobs with retry
+        const favorites = await fetchWithRetry(async () => {
           const favResponse = await fetch('/api/favorites');
           if (!favResponse.ok) {
             throw new Error('Failed to fetch favorites');
           }
-          const favorites: FavoriteJob[] = await favResponse.json();
+          return favResponse.json() as Promise<FavoriteJob[]>;
+        });
 
-          if (favorites.length === 0) {
-            setJobs([]);
-            setTotalCount(0);
-            return;
-          }
-
-          // Fetch job details for each favorite
-          const jobPromises = favorites.map(async (f) => {
-            const response = await fetch(`/api/jobs/${f.job_id}`);
-            if (response.ok) {
-              return response.json();
-            }
-            return null;
-          });
-
-          const jobResults = await Promise.all(jobPromises);
-          const validJobs = jobResults.filter((job): job is Job => job !== null);
-
-          // Sort by when they were favorited (most recent first)
-          const jobsMap = new Map(validJobs.map((job) => [job.id, job]));
-          const orderedJobs = favorites
-            .map((f) => jobsMap.get(f.job_id))
-            .filter((job): job is Job => job !== undefined);
-
-          setJobs(orderedJobs);
-          setTotalCount(orderedJobs.length);
-        } else {
-          // Fetch filtered jobs
-          const result = await fetchJobsPaginated(currentPage, pageSize, filters);
-          setJobs(result.jobs);
-          setTotalCount(result.totalCount);
+        if (favorites.length === 0) {
+          setJobs([]);
+          setTotalCount(0);
+          return;
         }
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        setError(`Failed to load jobs: ${errorMessage}`);
-        console.error('JobList error:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
 
+        // Fetch job details for each favorite
+        const jobPromises = favorites.map(async (f) => {
+          const response = await fetch(`/api/jobs/${f.job_id}`);
+          if (response.ok) {
+            return response.json();
+          }
+          return null;
+        });
+
+        const jobResults = await Promise.all(jobPromises);
+        const validJobs = jobResults.filter((job): job is Job => job !== null);
+
+        // Sort by when they were favorited (most recent first)
+        const jobsMap = new Map(validJobs.map((job) => [job.id, job]));
+        const orderedJobs = favorites
+          .map((f) => jobsMap.get(f.job_id))
+          .filter((job): job is Job => job !== undefined);
+
+        setJobs(orderedJobs);
+        setTotalCount(orderedJobs.length);
+      } else {
+        // Fetch filtered jobs with retry
+        const result = await fetchWithRetry(() =>
+          fetchJobsPaginated(currentPage, pageSize, filters)
+        );
+        setJobs(result.jobs);
+        setTotalCount(result.totalCount);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(`Failed to load jobs: ${errorMessage}`);
+      console.error('JobList error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, pageSize, filters, showFavorites]);
+
+  // Fetch jobs when page or filters change, or when switching to/from favorites view
+  useEffect(() => {
     loadJobs();
-  }, [currentPage, pageSize, filters, showFavorites, favoriteIds.size]);
+  }, [loadJobs, favoriteIds.size]);
 
   // Reset to page 1 when filters change or when toggling favorites view
   useEffect(() => {
@@ -171,7 +205,10 @@ export default function JobList({ filters, showFavorites = false, savedFilterLas
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <p className="text-destructive font-medium mb-2">Error Loading Jobs</p>
-        <p className="text-destructive/80 text-sm">{error}</p>
+        <p className="text-destructive/80 text-sm mb-4">{error}</p>
+        <Button variant="outline" size="sm" onClick={loadJobs}>
+          Try Again
+        </Button>
       </div>
     );
   }
