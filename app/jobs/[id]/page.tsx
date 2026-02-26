@@ -217,9 +217,9 @@ export default async function JobPage({ params }: JobPageProps) {
             )}
           </div>
 
-          {/* Posted date */}
+          {/* Date added */}
           <div className="mt-6 text-sm text-muted-foreground">
-            Posted {formatRelativeDate(job.date_posted || job.first_seen_date)}
+            Added {formatRelativeDate(job.first_seen_date)}
           </div>
         </CardContent>
         </Card>

@@ -28,9 +28,10 @@ export default function JobCard({ job, isFavorited, onToggleFavorite, isSignedIn
     return new Date(job.first_seen_date) > new Date(savedFilterLastChecked);
   })();
   // Date element - reused in two places for responsive layout
+  // Use first_seen_date (when job appeared in our system) to match sorting and "New" badge logic
   const dateElement = (
     <span className="text-sm text-muted-foreground whitespace-nowrap">
-      {formatRelativeDate(job.date_posted || job.first_seen_date)}
+      {formatRelativeDate(job.first_seen_date)}
     </span>
   );
 
