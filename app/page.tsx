@@ -18,7 +18,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { SignedIn, SignedOut, SignInButton, UserButton, useAuth } from '@clerk/nextjs';
 import { clerkAppearance, userButtonAppearance } from '@/lib/clerk-appearance';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
-import FontSwitcher from '@/components/FontSwitcher';
+
 
 const MAX_SAVED_FILTERS = 25;
 const SAVED_FILTER_CONTEXT_KEY = 'savedFilterNewJobsContext';
@@ -401,7 +401,6 @@ function HomeContent() {
               </p>
             </div>
             <div className="flex gap-2 items-center flex-shrink-0">
-              <FontSwitcher />
               <SignedIn>
                 <FavoritesButton
                   isActive={showingFavorites}
@@ -444,9 +443,6 @@ function HomeContent() {
                 <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
                   Find your dream job with advanced filtering and notifications
                 </p>
-                <div className="mt-2">
-                  <FontSwitcher />
-                </div>
               </div>
             </div>
 
