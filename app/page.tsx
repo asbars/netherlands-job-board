@@ -15,6 +15,7 @@ import { fetchJobsCount, fetchJobsSample, countJobsWithOfficeDays } from '@/lib/
 import { generateDynamicOptions, DynamicOptions, getEmptyOptions } from '@/lib/dynamicFilterOptions';
 import { getFiltersFromUrl, updateUrlWithFilters } from '@/lib/filterUrl';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { BackgroundPatternPicker } from '@/components/BackgroundPatternPicker';
 import { SignedIn, SignedOut, SignInButton, UserButton, useAuth } from '@clerk/nextjs';
 import { clerkAppearance, userButtonAppearance } from '@/lib/clerk-appearance';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
@@ -408,6 +409,7 @@ function HomeContent() {
                   onClick={() => setShowingFavorites(!showingFavorites)}
                 />
               </SignedIn>
+              <BackgroundPatternPicker />
               <ThemeToggle />
               <SignedOut>
                 <SignInButton mode="modal" appearance={clerkAppearance}>
@@ -489,6 +491,7 @@ function HomeContent() {
                 onClick={() => setShowingFavorites(!showingFavorites)}
               />
             </SignedIn>
+            <BackgroundPatternPicker />
             <ThemeToggle />
             <SignedOut>
               <SignInButton mode="modal" appearance={clerkAppearance}>
