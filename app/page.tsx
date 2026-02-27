@@ -432,18 +432,16 @@ function HomeContent() {
             <div
               className={`transition-all duration-300 ease-in-out overflow-hidden ${
                 isScrolled
-                  ? 'max-h-24 opacity-100 mb-3'
+                  ? 'max-h-28 opacity-100 mb-4'
                   : 'max-h-0 opacity-0 mb-0'
               }`}
             >
-              <div className="bg-card rounded-lg border border-border px-4 py-3">
-                <h1 className="text-base font-heading font-bold text-foreground leading-tight">
-                  Netherlands Job Opportunities
-                </h1>
-                <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
-                  Find your dream job with advanced filtering and notifications
-                </p>
-              </div>
+              <h1 className="text-2xl font-heading font-bold text-foreground leading-tight mb-1">
+                Netherlands Job Opportunities
+              </h1>
+              <p className="text-sm text-muted-foreground leading-snug">
+                Find your dream job with advanced filtering and notifications
+              </p>
             </div>
 
             <MetabaseStyleFilters
