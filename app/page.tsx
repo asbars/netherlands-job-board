@@ -393,13 +393,16 @@ function HomeContent() {
           }`}
         >
           <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
+            <div className="flex items-start gap-3 min-w-0">
+              <img src="/logo.png" alt="Logo" className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 mt-1" />
+              <div className="min-w-0">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold text-foreground mb-1 bg-background px-3 py-1 w-fit rounded-md">
                 Netherlands Job Opportunities
               </h1>
               <p className="text-muted-foreground bg-background px-3 py-1 w-fit rounded-md text-xs sm:text-sm">
                 Find your dream job in the Netherlands with advanced filtering and notifications
               </p>
+              </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 items-end sm:items-center flex-shrink-0">
               <SignedIn>
