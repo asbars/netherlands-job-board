@@ -394,7 +394,7 @@ function HomeContent() {
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3 min-w-0">
-              <img src="/logo.png" alt="Logo" className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 mt-1" />
+              <img src="/logo.png" alt="Logo" className="w-16 sm:w-20 flex-shrink-0 mt-1" />
               <div className="min-w-0">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold text-foreground mb-1 bg-background px-3 py-1 w-fit rounded-md">
                 Netherlands Job Opportunities
