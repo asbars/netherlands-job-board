@@ -49,13 +49,28 @@ const config: Config = {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
-  			}
+  			},
+  			'dutch-orange': 'hsl(var(--dutch-orange))',
+  			navy: 'hsl(var(--navy))',
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		}
+  		},
+  		fontFamily: {
+  			heading: ['var(--font-heading)', 'serif'],
+  			body: ['var(--font-body)', 'sans-serif'],
+  		},
+  		keyframes: {
+  			'fade-in-up': {
+  				'0%': { opacity: '0', transform: 'translateY(12px)' },
+  				'100%': { opacity: '1', transform: 'translateY(0)' },
+  			},
+  		},
+  		animation: {
+  			'fade-in-up': 'fade-in-up 0.4s ease-out both',
+  		},
   	}
   },
   plugins: [
@@ -64,4 +79,3 @@ const config: Config = {
   ],
 }
 export default config
-

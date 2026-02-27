@@ -18,6 +18,8 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { SignedIn, SignedOut, SignInButton, UserButton, useAuth } from '@clerk/nextjs';
 import { clerkAppearance, userButtonAppearance } from '@/lib/clerk-appearance';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
+import FontSwitcher from '@/components/FontSwitcher';
+import Image from 'next/image';
 
 const MAX_SAVED_FILTERS = 25;
 const SAVED_FILTER_CONTEXT_KEY = 'savedFilterNewJobsContext';
@@ -370,41 +372,58 @@ function HomeContent() {
 
   return (
     <main className="min-h-screen">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header */}
-        <header className="mb-8 flex items-start justify-between">
-          <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2 bg-background px-3 py-2 w-fit rounded-md">
-              Netherlands Job Opportunities
-            </h1>
-            <p className="text-muted-foreground bg-background px-3 py-1.5 w-fit rounded-md">
-              Find your dream job in the Netherlands with advanced filtering and notifications
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-end sm:items-center">
-            <SignedIn>
-              <FavoritesButton
-                isActive={showingFavorites}
-                onClick={() => setShowingFavorites(!showingFavorites)}
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-30 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo + Title */}
+            <div className="flex items-center gap-3">
+              <Image
+                src="/logo.png"
+                alt="JobsNL"
+                width={40}
+                height={40}
+                className="rounded-md"
               />
-            </SignedIn>
-            <ThemeToggle />
-            <SignedOut>
-              <SignInButton mode="modal" appearance={clerkAppearance}>
-                <button className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
-                  Sign In
-                </button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
-              <UserButton appearance={userButtonAppearance} />
-            </SignedIn>
-          </div>
-        </header>
+              <div>
+                <h1 className="text-xl font-heading font-bold text-foreground leading-tight">
+                  JobsNL
+                </h1>
+                <p className="text-xs text-muted-foreground hidden sm:block">
+                  Find your dream job in the Netherlands
+                </p>
+              </div>
+            </div>
 
+            {/* Action bar */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <FontSwitcher />
+              <SignedIn>
+                <FavoritesButton
+                  isActive={showingFavorites}
+                  onClick={() => setShowingFavorites(!showingFavorites)}
+                />
+              </SignedIn>
+              <ThemeToggle />
+              <SignedOut>
+                <SignInButton mode="modal" appearance={clerkAppearance}>
+                  <button className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium">
+                    Sign In
+                  </button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton appearance={userButtonAppearance} />
+              </SignedIn>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left sidebar - Advanced Filters */}
-          <aside className="w-full lg:w-96 flex-shrink-0">
+          <aside className="w-full lg:w-96 flex-shrink-0 lg:sticky lg:top-[80px] lg:self-start lg:max-h-[calc(100vh-96px)] lg:overflow-y-auto">
             <MetabaseStyleFilters
               filters={filters}
               onFiltersChange={handleFiltersChange}

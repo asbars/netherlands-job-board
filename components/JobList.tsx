@@ -191,7 +191,7 @@ export default function JobList({ filters, showFavorites = false, savedFilterLas
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4 border-t-2 border-t-transparent"></div>
           <p className="text-muted-foreground">Loading jobs...</p>
         </div>
       </div>
@@ -242,16 +242,21 @@ export default function JobList({ filters, showFavorites = false, savedFilterLas
 
   return (
     <div>
-      <div className="space-y-4">
-        {jobs.map((job) => (
-          <JobCard
+      <div className="space-y-3">
+        {jobs.map((job, index) => (
+          <div
             key={job.id}
-            job={job}
-            isFavorited={isFavorited(job.id)}
-            onToggleFavorite={toggleFavorite}
-            isSignedIn={isSignedIn}
-            savedFilterLastChecked={savedFilterLastChecked}
-          />
+            className="animate-fade-in-up"
+            style={{ animationDelay: `${Math.min(index * 50, 500)}ms` }}
+          >
+            <JobCard
+              job={job}
+              isFavorited={isFavorited(job.id)}
+              onToggleFavorite={toggleFavorite}
+              isSignedIn={isSignedIn}
+              savedFilterLastChecked={savedFilterLastChecked}
+            />
+          </div>
         ))}
       </div>
 
