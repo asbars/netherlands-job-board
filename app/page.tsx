@@ -19,7 +19,6 @@ import { SignedIn, SignedOut, SignInButton, UserButton, useAuth } from '@clerk/n
 import { clerkAppearance, userButtonAppearance } from '@/lib/clerk-appearance';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import FontSwitcher from '@/components/FontSwitcher';
-import Image from 'next/image';
 
 const MAX_SAVED_FILTERS = 25;
 const SAVED_FILTER_CONTEXT_KEY = 'savedFilterNewJobsContext';
@@ -117,6 +116,17 @@ function HomeContent() {
   const [showingFavorites, setShowingFavorites] = useState(false);
   // Track saved filter context for "New" badges - stores last_checked_at before it was updated
   const [savedFilterLastChecked, setSavedFilterLastChecked] = useState<string | null>(null);
+  // Track scroll position for collapsing header
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Collapse header after scrolling past ~80px
+      setIsScrolled(window.scrollY > 80);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Load filters from URL on mount and restore saved filter context
   useEffect(() => {
@@ -372,34 +382,88 @@ function HomeContent() {
 
   return (
     <main className="min-h-screen">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left sidebar - Logo, branding, filters (sticky) */}
-          <aside className="w-full lg:w-96 flex-shrink-0 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
-            {/* Branding header */}
-            <div className="mb-4 flex items-start gap-3">
-              <Image
-                src="/logo.png"
-                alt="JobsNL"
-                width={56}
-                height={56}
-                className="rounded-lg flex-shrink-0"
-              />
-              <div className="min-w-0">
-                <h1 className="text-2xl font-heading font-bold text-foreground leading-tight">
-                  Netherlands Job Opportunities
-                </h1>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Find your dream job in the Netherlands with advanced filtering and notifications
-                </p>
+      <div className="container mx-auto px-4 max-w-7xl">
+        {/* === EXPANDED HEADER (visible at top of page) === */}
+        <header
+          className={`transition-all duration-300 ease-in-out overflow-hidden ${
+            isScrolled
+              ? 'max-h-0 opacity-0 py-0'
+              : 'max-h-40 opacity-100 pt-8 pb-6'
+          }`}
+        >
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-4xl font-heading font-bold text-foreground mb-2 bg-background px-3 py-2 w-fit rounded-md">
+                Netherlands Job Opportunities
+              </h1>
+              <p className="text-muted-foreground bg-background px-3 py-1.5 w-fit rounded-md">
+                Find your dream job in the Netherlands with advanced filtering and notifications
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-end sm:items-center">
+              <FontSwitcher />
+              <SignedIn>
+                <FavoritesButton
+                  isActive={showingFavorites}
+                  onClick={() => setShowingFavorites(!showingFavorites)}
+                />
+              </SignedIn>
+              <ThemeToggle />
+              <SignedOut>
+                <SignInButton mode="modal" appearance={clerkAppearance}>
+                  <button className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+                    Sign In
+                  </button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton appearance={userButtonAppearance} />
+              </SignedIn>
+            </div>
+          </div>
+        </header>
+
+        {/* === COMPACT HEADER (sticky, visible when scrolled) === */}
+        <div
+          className={`sticky top-0 z-30 transition-all duration-300 ease-in-out ${
+            isScrolled
+              ? 'opacity-100 translate-y-0'
+              : 'opacity-0 -translate-y-4 pointer-events-none'
+          }`}
+        >
+          <div className="bg-card/95 backdrop-blur-sm border-b border-border shadow-sm rounded-b-lg -mx-4 px-4">
+            <div className="flex items-center justify-between h-14">
+              <h1 className="text-lg font-heading font-bold text-foreground truncate">
+                Netherlands Job Opportunities
+              </h1>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <FontSwitcher />
+                <SignedIn>
+                  <FavoritesButton
+                    isActive={showingFavorites}
+                    onClick={() => setShowingFavorites(!showingFavorites)}
+                  />
+                </SignedIn>
+                <ThemeToggle />
+                <SignedOut>
+                  <SignInButton mode="modal" appearance={clerkAppearance}>
+                    <button className="px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+                      Sign In
+                    </button>
+                  </SignInButton>
+                </SignedOut>
+                <SignedIn>
+                  <UserButton appearance={userButtonAppearance} />
+                </SignedIn>
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* Font switcher inline */}
-            <div className="mb-4">
-              <FontSwitcher />
-            </div>
-
+        {/* === MAIN CONTENT === */}
+        <div className="flex flex-col lg:flex-row gap-6 py-6">
+          {/* Left sidebar - Filters (sticky) */}
+          <aside className="w-full lg:w-96 flex-shrink-0 lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
             <MetabaseStyleFilters
               filters={filters}
               onFiltersChange={handleFiltersChange}
@@ -418,7 +482,7 @@ function HomeContent() {
             />
           </aside>
 
-          {/* Center content - Job listings */}
+          {/* Right content - Job listings */}
           <div className="flex-1 min-w-0">
             <JobList
               filters={filters}
@@ -426,50 +490,6 @@ function HomeContent() {
               savedFilterLastChecked={savedFilterLastChecked}
             />
           </div>
-
-          {/* Right toolbar - floating action buttons (sticky) */}
-          <div className="hidden lg:flex flex-col gap-2 lg:sticky lg:top-4 lg:self-start">
-            <SignedIn>
-              <FavoritesButton
-                isActive={showingFavorites}
-                onClick={() => setShowingFavorites(!showingFavorites)}
-              />
-            </SignedIn>
-            <ThemeToggle />
-            <SignedOut>
-              <SignInButton mode="modal" appearance={clerkAppearance}>
-                <button className="p-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors" title="Sign In">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
-              <UserButton appearance={userButtonAppearance} />
-            </SignedIn>
-          </div>
-        </div>
-
-        {/* Mobile toolbar - shown below sidebar on small screens */}
-        <div className="lg:hidden flex items-center gap-2 mt-4 mb-4 justify-end">
-          <SignedIn>
-            <FavoritesButton
-              isActive={showingFavorites}
-              onClick={() => setShowingFavorites(!showingFavorites)}
-            />
-          </SignedIn>
-          <ThemeToggle />
-          <SignedOut>
-            <SignInButton mode="modal" appearance={clerkAppearance}>
-              <button className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
-                Sign In
-              </button>
-            </SignInButton>
-          </SignedOut>
-          <SignedIn>
-            <UserButton appearance={userButtonAppearance} />
-          </SignedIn>
         </div>
       </div>
 
