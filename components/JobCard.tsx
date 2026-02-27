@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { Job } from '@/types/job';
 import {
@@ -19,6 +20,8 @@ interface JobCardProps {
 }
 
 export default function JobCard({ job, isFavorited, onToggleFavorite, isSignedIn, savedFilterLastChecked }: JobCardProps) {
+  const [expanded, setExpanded] = useState(false);
+
   // Determine if job is "new" (added to database after the saved filter was last checked)
   // We use first_seen_date because that's when the job appeared in our system,
   // not date_posted which is when the employer posted it (could be days earlier)
@@ -35,6 +38,8 @@ export default function JobCard({ job, isFavorited, onToggleFavorite, isSignedIn
     </span>
   );
 
+  const hasDetails = job.ai_core_responsibilities || job.ai_requirements_summary || (job.ai_benefits && job.ai_benefits.length > 0) || job.linkedin_org_industry;
+
   return (
     <Card className="hover:shadow-md transition-shadow duration-200">
       <CardContent className="p-6">
@@ -42,7 +47,7 @@ export default function JobCard({ job, isFavorited, onToggleFavorite, isSignedIn
           {/* Title row with heart and date (desktop) */}
           <div className="flex items-start justify-between">
             <Link href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-0">
-              <h3 className="text-xl font-semibold text-foreground hover:text-muted-foreground hover:underline mb-1 cursor-pointer">
+              <h3 className="text-xl font-heading font-semibold text-foreground hover:text-primary transition-colors hover:underline mb-1 cursor-pointer">
                 {job.title}
               </h3>
             </Link>
@@ -127,7 +132,7 @@ export default function JobCard({ job, isFavorited, onToggleFavorite, isSignedIn
         </div>
 
         {(job.ai_salary_minvalue || job.ai_salary_value) && (
-          <div className="mb-3 text-sm font-semibold text-foreground">
+          <div className="mb-3 text-sm font-semibold text-primary">
             {formatSalaryRange(
               job.ai_salary_minvalue,
               job.ai_salary_maxvalue,
@@ -138,38 +143,55 @@ export default function JobCard({ job, isFavorited, onToggleFavorite, isSignedIn
           </div>
         )}
 
-        {(job.ai_core_responsibilities || job.ai_requirements_summary) && (
-          <div className="mb-3 text-sm text-muted-foreground space-y-2">
-            {job.ai_core_responsibilities && (
-              <p>
-                <span className="font-medium text-foreground">Responsibilities:</span>{' '}
-                {job.ai_core_responsibilities.length > 200
-                  ? job.ai_core_responsibilities.slice(0, 200) + '...'
-                  : job.ai_core_responsibilities}
-              </p>
+        {/* Expandable details section */}
+        {hasDetails && (
+          <>
+            {expanded && (
+              <div className="mb-3 text-sm text-muted-foreground space-y-2 pt-3 border-t border-border/50">
+                {job.ai_core_responsibilities && (
+                  <p>
+                    <span className="font-medium text-foreground">Responsibilities:</span>{' '}
+                    {job.ai_core_responsibilities.length > 200
+                      ? job.ai_core_responsibilities.slice(0, 200) + '...'
+                      : job.ai_core_responsibilities}
+                  </p>
+                )}
+                {job.ai_requirements_summary && (
+                  <p>
+                    <span className="font-medium text-foreground">Requirements:</span>{' '}
+                    {job.ai_requirements_summary.length > 200
+                      ? job.ai_requirements_summary.slice(0, 200) + '...'
+                      : job.ai_requirements_summary}
+                  </p>
+                )}
+                {job.ai_benefits && job.ai_benefits.length > 0 && (
+                  <p>
+                    <span className="font-medium text-foreground">Benefits:</span> {job.ai_benefits.slice(0, 3).join(', ')}
+                    {job.ai_benefits.length > 3 && ` +${job.ai_benefits.length - 3} more`}
+                  </p>
+                )}
+                {job.linkedin_org_industry && (
+                  <p>
+                    <span className="font-medium text-foreground">Industry:</span> {job.linkedin_org_industry}
+                  </p>
+                )}
+              </div>
             )}
-            {job.ai_requirements_summary && (
-              <p>
-                <span className="font-medium text-foreground">Requirements:</span>{' '}
-                {job.ai_requirements_summary.length > 200
-                  ? job.ai_requirements_summary.slice(0, 200) + '...'
-                  : job.ai_requirements_summary}
-              </p>
-            )}
-          </div>
-        )}
-
-        {job.ai_benefits && job.ai_benefits.length > 0 && (
-          <div className="mb-3 text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">Benefits:</span> {job.ai_benefits.slice(0, 3).join(', ')}
-            {job.ai_benefits.length > 3 && ` +${job.ai_benefits.length - 3} more`}
-          </div>
-        )}
-
-        {job.linkedin_org_industry && (
-          <div className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">Industry:</span> {job.linkedin_org_industry}
-          </div>
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="text-xs text-primary/70 hover:text-primary transition-colors flex items-center gap-1"
+            >
+              {expanded ? 'Show less' : 'Show details'}
+              <svg
+                className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </>
         )}
       </CardContent>
     </Card>

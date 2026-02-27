@@ -158,9 +158,9 @@ export default function MetabaseStyleFilters({
         </div>
 
         {/* Progress bar */}
-        <div className="mt-2 h-1 bg-secondary rounded-full overflow-hidden">
+        <div className="mt-2 h-1.5 bg-secondary rounded-full overflow-hidden">
           <div
-            className="h-full bg-primary transition-all duration-300"
+            className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
             style={{ width: `${totalCount > 0 ? (resultCount / totalCount) * 100 : 0}%` }}
           />
         </div>

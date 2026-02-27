@@ -18,6 +18,8 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { SignedIn, SignedOut, SignInButton, UserButton, useAuth } from '@clerk/nextjs';
 import { clerkAppearance, userButtonAppearance } from '@/lib/clerk-appearance';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
+import FontSwitcher from '@/components/FontSwitcher';
+import Image from 'next/image';
 
 const MAX_SAVED_FILTERS = 25;
 const SAVED_FILTER_CONTEXT_KEY = 'savedFilterNewJobsContext';
@@ -84,8 +86,8 @@ function FavoritesButton({ isActive, onClick }: { isActive: boolean; onClick: ()
   return (
     <button
       onClick={onClick}
-      className={`p-2 rounded-md bg-background hover:bg-accent hover:text-accent-foreground transition-colors ${
-        isActive ? 'text-red-500' : ''
+      className={`p-2 rounded-md bg-card hover:bg-muted transition-colors ${
+        isActive ? 'text-red-500' : 'text-muted-foreground'
       }`}
       aria-label={isActive ? 'Show all jobs' : 'View favorites'}
     >
@@ -370,41 +372,34 @@ function HomeContent() {
 
   return (
     <main className="min-h-screen">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header */}
-        <header className="mb-8 flex items-start justify-between">
-          <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2 bg-background px-3 py-2 w-fit rounded-md">
-              Netherlands Job Opportunities
-            </h1>
-            <p className="text-muted-foreground bg-background px-3 py-1.5 w-fit rounded-md">
-              Find your dream job in the Netherlands with advanced filtering and notifications
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-end sm:items-center">
-            <SignedIn>
-              <FavoritesButton
-                isActive={showingFavorites}
-                onClick={() => setShowingFavorites(!showingFavorites)}
-              />
-            </SignedIn>
-            <ThemeToggle />
-            <SignedOut>
-              <SignInButton mode="modal" appearance={clerkAppearance}>
-                <button className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
-                  Sign In
-                </button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
-              <UserButton appearance={userButtonAppearance} />
-            </SignedIn>
-          </div>
-        </header>
-
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left sidebar - Advanced Filters */}
-          <aside className="w-full lg:w-96 flex-shrink-0">
+          {/* Left sidebar - Logo, branding, filters (sticky) */}
+          <aside className="w-full lg:w-96 flex-shrink-0 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
+            {/* Branding header */}
+            <div className="mb-4 flex items-start gap-3">
+              <Image
+                src="/logo.png"
+                alt="JobsNL"
+                width={56}
+                height={56}
+                className="rounded-lg flex-shrink-0"
+              />
+              <div className="min-w-0">
+                <h1 className="text-2xl font-heading font-bold text-foreground leading-tight">
+                  Netherlands Job Opportunities
+                </h1>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Find your dream job in the Netherlands with advanced filtering and notifications
+                </p>
+              </div>
+            </div>
+
+            {/* Font switcher inline */}
+            <div className="mb-4">
+              <FontSwitcher />
+            </div>
+
             <MetabaseStyleFilters
               filters={filters}
               onFiltersChange={handleFiltersChange}
@@ -423,7 +418,7 @@ function HomeContent() {
             />
           </aside>
 
-          {/* Right content - Job listings */}
+          {/* Center content - Job listings */}
           <div className="flex-1 min-w-0">
             <JobList
               filters={filters}
@@ -431,6 +426,50 @@ function HomeContent() {
               savedFilterLastChecked={savedFilterLastChecked}
             />
           </div>
+
+          {/* Right toolbar - floating action buttons (sticky) */}
+          <div className="hidden lg:flex flex-col gap-2 lg:sticky lg:top-4 lg:self-start">
+            <SignedIn>
+              <FavoritesButton
+                isActive={showingFavorites}
+                onClick={() => setShowingFavorites(!showingFavorites)}
+              />
+            </SignedIn>
+            <ThemeToggle />
+            <SignedOut>
+              <SignInButton mode="modal" appearance={clerkAppearance}>
+                <button className="p-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors" title="Sign In">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton appearance={userButtonAppearance} />
+            </SignedIn>
+          </div>
+        </div>
+
+        {/* Mobile toolbar - shown below sidebar on small screens */}
+        <div className="lg:hidden flex items-center gap-2 mt-4 mb-4 justify-end">
+          <SignedIn>
+            <FavoritesButton
+              isActive={showingFavorites}
+              onClick={() => setShowingFavorites(!showingFavorites)}
+            />
+          </SignedIn>
+          <ThemeToggle />
+          <SignedOut>
+            <SignInButton mode="modal" appearance={clerkAppearance}>
+              <button className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+                Sign In
+              </button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <UserButton appearance={userButtonAppearance} />
+          </SignedIn>
         </div>
       </div>
 
