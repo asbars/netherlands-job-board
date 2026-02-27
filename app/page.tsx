@@ -383,24 +383,25 @@ function HomeContent() {
   return (
     <main className="min-h-screen">
       <div className="container mx-auto px-4 max-w-7xl">
-        {/* === EXPANDED HEADER (visible at top of page, collapses on scroll) === */}
+        {/* === HEADER === */}
+        {/* On mobile: always visible, never collapses. On desktop: collapses on scroll. */}
         <header
-          className={`transition-all duration-300 ease-in-out overflow-hidden ${
+          className={`pt-6 pb-4 transition-all duration-300 ease-in-out lg:overflow-hidden ${
             isScrolled
-              ? 'max-h-0 opacity-0 pt-0 pb-0'
-              : 'max-h-32 opacity-100 pt-6 pb-4'
+              ? 'lg:max-h-0 lg:opacity-0 lg:pt-0 lg:pb-0'
+              : 'lg:max-h-32 lg:opacity-100'
           }`}
         >
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-4xl font-heading font-bold text-foreground mb-1 bg-background px-3 py-1 w-fit rounded-md">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold text-foreground mb-1 bg-background px-3 py-1 w-fit rounded-md">
                 Netherlands Job Opportunities
               </h1>
-              <p className="text-muted-foreground bg-background px-3 py-1 w-fit rounded-md text-sm">
+              <p className="text-muted-foreground bg-background px-3 py-1 w-fit rounded-md text-xs sm:text-sm">
                 Find your dream job in the Netherlands with advanced filtering and notifications
               </p>
             </div>
-            <div className="flex gap-2 items-center flex-shrink-0">
+            <div className="flex flex-col sm:flex-row gap-2 items-end sm:items-center flex-shrink-0">
               <SignedIn>
                 <FavoritesButton
                   isActive={showingFavorites}
@@ -410,8 +411,11 @@ function HomeContent() {
               <ThemeToggle />
               <SignedOut>
                 <SignInButton mode="modal" appearance={clerkAppearance}>
-                  <button className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
-                    Sign In
+                  <button className="p-2 sm:px-4 sm:py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+                    <span className="hidden sm:inline">Sign In</span>
+                    <svg className="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
                   </button>
                 </SignInButton>
               </SignedOut>
@@ -428,9 +432,9 @@ function HomeContent() {
           <aside className={`w-full lg:w-96 flex-shrink-0 lg:sticky lg:self-start lg:overflow-y-auto transition-all duration-300 ${
             isScrolled ? 'lg:top-4 lg:max-h-[calc(100vh-2rem)]' : 'lg:top-4 lg:max-h-[calc(100vh-2rem)]'
           }`}>
-            {/* Compact branding - slides in when scrolled */}
+            {/* Compact branding - slides in when scrolled (desktop only) */}
             <div
-              className={`transition-all duration-300 ease-in-out overflow-hidden ${
+              className={`hidden lg:block transition-all duration-300 ease-in-out overflow-hidden ${
                 isScrolled
                   ? 'max-h-28 opacity-100 mb-4'
                   : 'max-h-0 opacity-0 mb-0'
