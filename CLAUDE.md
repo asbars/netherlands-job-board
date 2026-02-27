@@ -33,7 +33,7 @@ npm test             # Run favorites integration tests (tsx tests/test-favorites
 - Tailwind CSS with HSL CSS variables defined in `app/globals.css`
 - shadcn/ui components (new-york style) in `components/ui/`
 - Fonts: DM Sans (body), Bricolage Grotesque (headings) via Google Fonts
-- Background pattern switchable via `--bg-pattern` CSS variable + `BackgroundPatternPicker`
+- Fixed linen background pattern (doesn't scroll with content)
 
 ### Auth
 - Clerk wraps the app in `layout.tsx`
