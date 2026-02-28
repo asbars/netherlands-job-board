@@ -107,7 +107,12 @@ export default function JobList({ filters, showFavorites = false, savedFilterLas
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(() => {
+    if (typeof window === 'undefined') return 1;
+    const params = new URLSearchParams(window.location.search);
+    const pageParam = params.get('page');
+    return pageParam ? Math.max(1, parseInt(pageParam, 10) || 1) : 1;
+  });
   const [pageSize] = useState(DEFAULT_PAGE_SIZE);
 
   // Load jobs function - extracted so it can be called for retry
@@ -179,12 +184,32 @@ export default function JobList({ filters, showFavorites = false, savedFilterLas
   // Reset to page 1 when filters change or when toggling favorites view
   useEffect(() => {
     setCurrentPage(1);
+    // Clear page param from URL
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('page')) {
+      params.delete('page');
+      const newUrl = params.toString()
+        ? `${window.location.pathname}?${params.toString()}`
+        : window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
   }, [filters, showFavorites]);
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    // Sync page to URL so job detail "Back to jobs" can restore it
+    const params = new URLSearchParams(window.location.search);
+    if (page > 1) {
+      params.set('page', String(page));
+    } else {
+      params.delete('page');
+    }
+    const newUrl = params.toString()
+      ? `${window.location.pathname}?${params.toString()}`
+      : window.location.pathname;
+    window.history.replaceState({}, '', newUrl);
     // Scroll to top of job list
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
