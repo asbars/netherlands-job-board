@@ -374,7 +374,11 @@ function HomeContent() {
 
   // Clear saved filter context when filters change manually
   function handleFiltersChange(newFilters: FilterCondition[]) {
-    setActiveSavedFilterId(null);
+    // Keep activeSavedFilterId so the user can still "Update" the filter they started from.
+    // Only clear it when filters are fully removed (e.g. "Clear all").
+    if (newFilters.length === 0) {
+      setActiveSavedFilterId(null);
+    }
     setSavedFilterLastChecked(null);
     clearSavedFilterContextLocal();
     // Clear server-side context too (fire and forget)
