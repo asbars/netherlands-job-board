@@ -425,11 +425,15 @@ function HomeContent() {
         >
           <div className="flex items-start justify-between gap-3 lg:pr-14">
             <div className="flex items-start sm:items-end gap-3 min-w-0">
-              <img src="/logo.png" alt="Logo" className="w-16 sm:w-20 flex-shrink-0" />
+              <a href="/" className="flex-shrink-0">
+                <img src="/logo.png" alt="Logo" className="w-16 sm:w-20" />
+              </a>
               <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold text-foreground mb-1 bg-background px-3 py-1 w-fit rounded-md">
-                Netherlands Job Opportunities
-              </h1>
+              <a href="/" className="no-underline hover:no-underline">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold text-foreground mb-1 bg-background px-3 py-1 w-fit rounded-md">
+                  Netherlands Job Opportunities
+                </h1>
+              </a>
               <p className="text-muted-foreground bg-background px-3 py-1 w-fit rounded-md text-xs sm:text-sm">
                 Find your dream job in the Netherlands with advanced filtering and notifications
               </p>
