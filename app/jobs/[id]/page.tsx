@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { fetchJobById } from '@/lib/supabase';
 import {
   formatEmploymentType,
@@ -13,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import FavoriteButton from '@/components/FavoriteButton';
+import BackToJobsLink from '@/components/BackToJobsLink';
 
 interface JobPageProps {
   params: Promise<{ id: string }>;
@@ -31,15 +31,7 @@ export default async function JobPage({ params }: JobPageProps) {
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Back link */}
-        <Link
-          href="/"
-          className="inline-flex items-center text-primary hover:text-primary/80 mb-6"
-        >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to jobs
-        </Link>
+        <BackToJobsLink />
 
         <Card>
           <CardContent className="p-8">
