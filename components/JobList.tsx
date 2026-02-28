@@ -170,9 +170,11 @@ export default function JobList({ filters, showFavorites = false, savedFilterLas
   }, [currentPage, pageSize, filters, showFavorites]);
 
   // Fetch jobs when page or filters change, or when switching to/from favorites view
+  // Only react to favoriteIds changes when viewing favorites
+  const favSize = showFavorites ? favoriteIds.size : 0;
   useEffect(() => {
     loadJobs();
-  }, [loadJobs, favoriteIds.size]);
+  }, [loadJobs, favSize]);
 
   // Reset to page 1 when filters change or when toggling favorites view
   useEffect(() => {
