@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { fetchNewJobsFromAPI } from '@/lib/apify';
+import { fetchNewJobsFromAPI, fetchExpiredJobs } from '@/lib/apify';
 
 // Verify cron secret
 function verifyCronSecret(request: NextRequest): boolean {
@@ -199,14 +199,69 @@ export async function GET(request: NextRequest) {
       run_status: 'success',
     });
     
-    console.log(`💰 Cost: $${cost.toFixed(2)}`);
-    
+    console.log(`💰 New jobs cost: $${cost.toFixed(2)}`);
+
+    // --- Step 2: Mark expired jobs ---
+    let expiredCount = 0;
+    let expiredCost = 0;
+    try {
+      console.log('📥 Fetching expired job IDs from Apify...');
+      const expiredIds = await fetchExpiredJobs();
+      console.log(`✅ Retrieved ${expiredIds.length} expired job IDs`);
+
+      if (expiredIds.length > 0) {
+        // Update in batches of 500 to avoid query size limits
+        const batchSize = 500;
+        for (let i = 0; i < expiredIds.length; i += batchSize) {
+          const batch = expiredIds.slice(i, i + batchSize);
+          const { data: updated, error: expireError } = await supabase
+            .from('jobmarket_jobs')
+            .update({ status: 'expired', last_updated: new Date().toISOString() })
+            .in('external_id', batch)
+            .eq('status', 'active')
+            .select('id');
+
+          if (expireError) {
+            console.error(`❌ Error marking expired batch ${i / batchSize + 1}:`, expireError);
+          } else {
+            expiredCount += updated?.length || 0;
+          }
+        }
+        console.log(`✅ Marked ${expiredCount} jobs as expired`);
+      }
+
+      // Log expired jobs actor usage
+      expiredCost = expiredIds.length * 0.001; // lower cost per ID check
+      await supabase.from('jobmarket_apify_usage_logs').insert({
+        actor: 'career-site-job-listing-expired-jobs',
+        job_count: expiredIds.length,
+        cost: expiredCost,
+        notes: `Daily expired jobs sync - marked ${expiredCount} as expired`,
+        run_status: 'success',
+      });
+    } catch (expiredError: any) {
+      console.error('❌ Expired jobs sync error (non-fatal):', expiredError.message);
+      // Log the failure but don't fail the whole sync
+      try {
+        await supabase.from('jobmarket_apify_usage_logs').insert({
+          actor: 'career-site-job-listing-expired-jobs',
+          job_count: 0,
+          cost: 0,
+          notes: `Expired jobs sync failed: ${expiredError.message}`,
+          run_status: 'failed',
+        });
+      } catch { /* ignore logging failure */ }
+    }
+
+    console.log(`💰 Total cost: $${(cost + expiredCost).toFixed(2)}`);
+
     return NextResponse.json({
       success: true,
       message: 'Daily sync completed successfully',
       jobsProcessed: insertedCount,
       jobsFetched: jobs.length,
-      cost: cost,
+      jobsExpired: expiredCount,
+      cost: cost + expiredCost,
     });
     
   } catch (error: any) {

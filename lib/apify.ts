@@ -11,7 +11,7 @@ const apifyClient = new ApifyClient({
 // Apify Actor IDs (note: using ~ not / for API calls)
 const CAREER_SITE_API_ACTOR_ID = 'fantastic-jobs~career-site-job-listing-api';
 const CAREER_SITE_FEED_ACTOR_ID = 'fantastic-jobs~career-site-job-listing-feed';
-const EXPIRED_JOBS_ACTOR_ID = 'fantastic-jobs~career-site-job-listing-expired-jobs';
+const EXPIRED_JOBS_ACTOR_ID = 'fantastic-jobs~expired-jobs-api-for-career-site-job-listing-api';
 
 /**
  * Fetch new jobs from Apify Career Site Job Listing API (incremental)
@@ -167,119 +167,52 @@ export async function fetchAllJobsFromFeed(config: ApifyRunConfig = {}): Promise
 }
 
 /**
- * Fetch list of expired job IDs
- * Returns array of external_ids that have expired
+ * Fetch list of expired job IDs from Apify
+ * The actor returns a flat array of numeric IDs: [1316438376, 1318648037, ...]
+ * We convert them to strings to match our external_id column format
  */
 export async function fetchExpiredJobs(): Promise<string[]> {
   console.log('Fetching expired jobs from Apify');
-  
+
   if (!APIFY_API_TOKEN) {
     throw new Error('APIFY_API_TOKEN environment variable is not set');
   }
-  
-  try {
-    const runResponse = await fetch(
-      `https://api.apify.com/v2/acts/${EXPIRED_JOBS_ACTOR_ID}/runs`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${APIFY_API_TOKEN}`,
-        },
-        body: JSON.stringify({
-          country: 'Netherlands',
-        }),
-      }
-    );
 
-    if (!runResponse.ok) {
-      const errorText = await runResponse.text();
-      throw new Error(`Apify Expired Jobs API error: ${runResponse.status} - ${errorText}`);
+  try {
+    const run = await apifyClient.actor(EXPIRED_JOBS_ACTOR_ID).call({
+      returnAsArray: true,
+    });
+
+    console.log(`Expired jobs run completed: ${run.id}, status: ${run.status}`);
+
+    if (run.status !== 'SUCCEEDED') {
+      throw new Error(`Expired jobs actor run failed with status: ${run.status}`);
     }
 
-    const runData = await runResponse.json();
-    const runId = runData.data.id;
-    const datasetId = runData.data.defaultDatasetId;
-    
-    console.log(`Expired jobs run started: ${runId}`);
-    
-    // Wait for completion
-    await waitForRunCompletion(runId);
-    
-    // Fetch results
-    const expiredJobsData = await fetchDatasetItems(datasetId);
-    
-    // Extract job IDs
-    const expiredIds = expiredJobsData.map((job: any) => job.id || job.external_id);
-    console.log(`Found ${expiredIds.length} expired jobs`);
-    
+    const { items } = await apifyClient.dataset(run.defaultDatasetId).listItems();
+
+    // The actor returns numeric IDs. Depending on how Apify stores them,
+    // items could be: [123, 456, ...] or [[123, 456, ...]] or [{id: 123}, ...]
+    let expiredIds: string[];
+    if (items.length === 0) {
+      expiredIds = [];
+    } else if (Array.isArray(items[0])) {
+      // Single item that is the array itself
+      expiredIds = (items[0] as any[]).map((id: any) => String(id));
+    } else if (typeof items[0] === 'object' && items[0] !== null && !Array.isArray(items[0])) {
+      // Items are objects - extract the ID field
+      expiredIds = items.map((item: any) => String(item.id || item.external_id || item));
+    } else {
+      // Items are primitives (numbers/strings)
+      expiredIds = items.map((item: any) => String(item));
+    }
+    console.log(`Found ${expiredIds.length} expired job IDs (first 5: ${expiredIds.slice(0, 5).join(', ')})`);
+
     return expiredIds;
   } catch (error) {
     console.error('Error fetching expired jobs:', error);
     throw error;
   }
-}
-
-/**
- * Wait for an Apify actor run to complete
- */
-async function waitForRunCompletion(runId: string, maxWaitTime = 600000): Promise<void> {
-  const startTime = Date.now();
-  const pollInterval = 5000; // Poll every 5 seconds
-  
-  while (Date.now() - startTime < maxWaitTime) {
-    const statusResponse = await fetch(
-      `https://api.apify.com/v2/actor-runs/${runId}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${APIFY_API_TOKEN}`,
-        },
-      }
-    );
-    
-    if (!statusResponse.ok) {
-      throw new Error(`Failed to check run status: ${statusResponse.statusText}`);
-    }
-    
-    const statusData = await statusResponse.json();
-    const status = statusData.data.status;
-    
-    console.log(`Run ${runId} status: ${status}`);
-    
-    if (status === 'SUCCEEDED') {
-      return;
-    }
-    
-    if (status === 'FAILED' || status === 'ABORTED' || status === 'TIMED-OUT') {
-      throw new Error(`Actor run ${status.toLowerCase()}: ${runId}`);
-    }
-    
-    // Wait before next poll
-    await new Promise(resolve => setTimeout(resolve, pollInterval));
-  }
-  
-  throw new Error(`Run ${runId} did not complete within ${maxWaitTime / 1000} seconds`);
-}
-
-/**
- * Fetch items from an Apify dataset
- */
-async function fetchDatasetItems(datasetId: string): Promise<ApifyJobData[]> {
-  const response = await fetch(
-    `https://api.apify.com/v2/datasets/${datasetId}/items`,
-    {
-      headers: {
-        'Authorization': `Bearer ${APIFY_API_TOKEN}`,
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch dataset items: ${response.statusText}`);
-  }
-
-  const items = await response.json();
-  return items;
 }
 
 /**
