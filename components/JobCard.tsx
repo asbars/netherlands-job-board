@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { Job } from '@/types/job';
 import {
   formatEmploymentType,
@@ -46,11 +45,21 @@ export default function JobCard({ job, isFavorited, onToggleFavorite, isSignedIn
         <div className="mb-3">
           {/* Title row with heart and date (desktop) */}
           <div className="flex items-start justify-between">
-            <Link href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-0">
+            <a
+              href={`/jobs/${job.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => {
+                e.preventDefault();
+                const from = encodeURIComponent(window.location.pathname + window.location.search);
+                window.open(`/jobs/${job.id}?from=${from}`, '_blank', 'noopener,noreferrer');
+              }}
+              className="flex-1 min-w-0"
+            >
               <h3 className="text-xl font-heading font-semibold text-foreground hover:text-primary transition-colors hover:underline mb-1 cursor-pointer">
                 {job.title}
               </h3>
-            </Link>
+            </a>
             <div className="text-right ml-4 flex items-center gap-2 flex-shrink-0">
               {isNewJob && (
                 <Badge className="bg-green-500 hover:bg-green-500 text-white text-xs px-1.5 py-0.5">
