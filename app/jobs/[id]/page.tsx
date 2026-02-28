@@ -11,6 +11,8 @@ import { sanitizeJobDescription } from '@/lib/sanitizeHtml';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { FavoritesProvider } from '@/contexts/FavoritesContext';
+import FavoriteButton from '@/components/FavoriteButton';
 
 interface JobPageProps {
   params: Promise<{ id: string }>;
@@ -25,6 +27,7 @@ export default async function JobPage({ params }: JobPageProps) {
   }
 
   return (
+    <FavoritesProvider>
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Back link */}
@@ -42,7 +45,10 @@ export default async function JobPage({ params }: JobPageProps) {
           <CardContent className="p-8">
             {/* Header */}
             <div className="mb-6">
-              <h1 className="text-3xl font-bold text-foreground mb-2">{job.title}</h1>
+              <div className="flex items-start justify-between">
+                <h1 className="text-3xl font-bold text-foreground mb-2">{job.title}</h1>
+                <FavoriteButton jobId={job.id} />
+              </div>
               <p className="text-xl text-muted-foreground mb-4">{job.organization}</p>
 
               <div className="flex flex-wrap gap-3 text-sm">
@@ -225,5 +231,6 @@ export default async function JobPage({ params }: JobPageProps) {
         </Card>
       </div>
     </main>
+    </FavoritesProvider>
   );
 }
