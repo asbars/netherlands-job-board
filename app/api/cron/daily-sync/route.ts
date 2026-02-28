@@ -120,7 +120,10 @@ function transformJobForDatabase(apifyJob: any) {
 }
 
 export async function GET(request: NextRequest) {
-  console.log('🔄 Daily sync cron job started');
+  const startTime = Date.now();
+  console.log('========================================');
+  console.log('🔄 Daily sync cron job started at', new Date().toISOString());
+  console.log('========================================');
   
   // Verify authorization
   if (!verifyCronSecret(request)) {
@@ -154,52 +157,49 @@ export async function GET(request: NextRequest) {
     });
     
     console.log(`✅ Retrieved ${jobs.length} jobs from Apify`);
-    
-    if (jobs.length === 0) {
-      return NextResponse.json({
-        success: true,
-        message: 'No new jobs found',
-        jobsProcessed: 0,
-        cost: 0,
-      });
-    }
-    
+
     // Initialize Supabase with service role key for backend operations
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
-    // Transform and insert jobs
-    const transformedJobs = jobs.map(transformJobForDatabase);
-    
-    console.log('💾 Inserting jobs into database...');
-    const { data, error } = await supabase
-      .from('jobmarket_jobs')
-      .upsert(transformedJobs, {
-        onConflict: 'external_id',
-        ignoreDuplicates: false,
-      })
-      .select('id');
-    
-    if (error) {
-      console.error('❌ Database error:', error);
-      throw error;
+
+    // --- Step 1: Insert/update new jobs ---
+    let insertedCount = 0;
+    let cost = 0;
+
+    if (jobs.length === 0) {
+      console.log('ℹ️ No new jobs found — skipping insert step');
+    } else {
+      const transformedJobs = jobs.map(transformJobForDatabase);
+
+      console.log(`💾 Inserting ${transformedJobs.length} jobs into database...`);
+      const { data, error } = await supabase
+        .from('jobmarket_jobs')
+        .upsert(transformedJobs, {
+          onConflict: 'external_id',
+          ignoreDuplicates: false,
+        })
+        .select('id');
+
+      if (error) {
+        console.error('❌ Database error:', error);
+        throw error;
+      }
+
+      insertedCount = data?.length || 0;
+      console.log(`✅ Inserted/updated ${insertedCount} jobs`);
+
+      cost = jobs.length * 0.012; // $0.012 per job for API
+      await supabase.from('jobmarket_apify_usage_logs').insert({
+        actor: 'career-site-job-listing-api',
+        job_count: jobs.length,
+        cost: cost,
+        notes: 'Daily cron sync',
+        run_status: 'success',
+      });
+
+      console.log(`💰 New jobs cost: $${cost.toFixed(2)}`);
     }
-    
-    const insertedCount = data?.length || 0;
-    console.log(`✅ Inserted/updated ${insertedCount} jobs`);
-    
-    // Log usage
-    const cost = jobs.length * 0.012; // $0.012 per job for API
-    await supabase.from('jobmarket_apify_usage_logs').insert({
-      actor: 'career-site-job-listing-api',
-      job_count: jobs.length,
-      cost: cost,
-      notes: 'Daily cron sync',
-      run_status: 'success',
-    });
-    
-    console.log(`💰 New jobs cost: $${cost.toFixed(2)}`);
 
     // --- Step 2: Mark expired jobs ---
     let expiredCount = 0;
@@ -253,7 +253,16 @@ export async function GET(request: NextRequest) {
       } catch { /* ignore logging failure */ }
     }
 
-    console.log(`💰 Total cost: $${(cost + expiredCost).toFixed(2)}`);
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+    console.log('========================================');
+    console.log('📊 DAILY SYNC SUMMARY');
+    console.log(`   New jobs fetched:    ${jobs.length}`);
+    console.log(`   Jobs inserted/updated: ${insertedCount}`);
+    console.log(`   Expired IDs received:  (see above)`);
+    console.log(`   Jobs marked expired:   ${expiredCount}`);
+    console.log(`   Total cost:            $${(cost + expiredCost).toFixed(2)}`);
+    console.log(`   Duration:              ${duration}s`);
+    console.log('========================================');
 
     return NextResponse.json({
       success: true,
@@ -262,6 +271,7 @@ export async function GET(request: NextRequest) {
       jobsFetched: jobs.length,
       jobsExpired: expiredCount,
       cost: cost + expiredCost,
+      durationSeconds: parseFloat(duration),
     });
     
   } catch (error: any) {
