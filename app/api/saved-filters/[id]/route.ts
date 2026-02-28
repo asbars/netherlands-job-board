@@ -18,10 +18,10 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { name, notifications_enabled } = body;
+    const { name, notifications_enabled, filters } = body;
 
     // Must provide at least one field to update
-    if (name === undefined && notifications_enabled === undefined) {
+    if (name === undefined && notifications_enabled === undefined && filters === undefined) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
     }
 
@@ -36,6 +36,10 @@ export async function PATCH(
 
     if (notifications_enabled !== undefined) {
       updateData.notifications_enabled = notifications_enabled;
+    }
+
+    if (filters !== undefined) {
+      updateData.filters = filters;
     }
 
     // Update the filter (only if it belongs to the user)

@@ -115,6 +115,7 @@ function HomeContent() {
   const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([]);
   const [isLoadingSavedFilters, setIsLoadingSavedFilters] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [activeSavedFilterId, setActiveSavedFilterId] = useState<number | null>(null);
   const [showingFavorites, setShowingFavorites] = useState(false);
   // Track saved filter context for "New" badges - stores last_checked_at before it was updated
   const [savedFilterLastChecked, setSavedFilterLastChecked] = useState<string | null>(null);
@@ -242,22 +243,44 @@ function HomeContent() {
     }
   }
 
-  // Handle saving a new filter
-  async function handleSaveFilter(name: string) {
+  // Handle saving a filter (new or update existing)
+  async function handleSaveFilter(name: string, updateId?: number) {
     try {
-      const response = await fetch('/api/saved-filters', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, filters }),
-      });
+      if (updateId) {
+        // Update existing filter
+        const response = await fetch(`/api/saved-filters/${updateId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, filters }),
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to save filter');
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to update filter');
+        }
+
+        const updatedFilter = await response.json();
+        setSavedFilters((prev) =>
+          prev.map((f) => (f.id === updateId ? { ...f, ...updatedFilter } : f))
+        );
+        setActiveSavedFilterId(updateId);
+      } else {
+        // Create new filter
+        const response = await fetch('/api/saved-filters', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, filters }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to save filter');
+        }
+
+        const newFilter = await response.json();
+        setSavedFilters((prev) => [newFilter, ...prev]);
+        setActiveSavedFilterId(newFilter.id);
       }
-
-      const newFilter = await response.json();
-      setSavedFilters((prev) => [newFilter, ...prev]);
     } catch (error: any) {
       throw error;
     }
@@ -306,6 +329,7 @@ function HomeContent() {
 
   // Handle applying a saved filter and mark it as checked
   async function handleApplySavedFilter(filterConditions: FilterCondition[], filterId: number) {
+    setActiveSavedFilterId(filterId);
     // Find the filter to get its last_checked_at before updating
     const savedFilter = savedFilters.find((f) => f.id === filterId);
     if (savedFilter?.last_checked_at) {
@@ -350,6 +374,7 @@ function HomeContent() {
 
   // Clear saved filter context when filters change manually
   function handleFiltersChange(newFilters: FilterCondition[]) {
+    setActiveSavedFilterId(null);
     setSavedFilterLastChecked(null);
     clearSavedFilterContextLocal();
     // Clear server-side context too (fire and forget)
@@ -518,6 +543,8 @@ function HomeContent() {
         onSave={handleSaveFilter}
         currentCount={savedFilters.length}
         maxCount={MAX_SAVED_FILTERS}
+        activeFilter={activeSavedFilterId ? savedFilters.find(f => f.id === activeSavedFilterId) ?? null : null}
+        savedFilterNames={savedFilters.map(f => ({ id: f.id, name: f.name }))}
       />
     </main>
   );
