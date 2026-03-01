@@ -3,6 +3,7 @@ import { DM_Sans, Bricolage_Grotesque, Fraunces, Plus_Jakarta_Sans } from 'next/
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ClerkProvider } from '@clerk/nextjs'
+import { clerkAppearance } from '@/lib/clerk-appearance'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -39,6 +40,7 @@ export default function RootLayout({
     <ClerkProvider
       afterSignInUrl="/"
       afterSignUpUrl="/"
+      appearance={clerkAppearance}
     >
       <html lang="en" suppressHydrationWarning>
         <body className={`${dmSans.variable} ${dmSans.className} ${bricolage.variable} ${fraunces.variable} ${plusJakarta.variable}`}>
