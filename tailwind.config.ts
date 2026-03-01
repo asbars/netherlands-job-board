@@ -59,6 +59,8 @@ const config: Config = {
   		fontFamily: {
   			heading: ['var(--font-heading)', 'sans-serif'],
   			body: ['var(--font-body)', 'sans-serif'],
+  			fraunces: ['var(--font-fraunces)', 'serif'],
+  			jakarta: ['var(--font-jakarta)', 'sans-serif'],
   		},
   	}
   },

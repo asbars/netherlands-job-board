@@ -115,3 +115,47 @@
 .animate-fade-in-up {
   animation: fadeInUp 0.4s ease-out both;
 }
+
+/* ── Landing page styles ── */
+@keyframes landing-float-chip {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes landing-fade-slide-down {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes landing-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+
+.landing-animate-fade {
+  animation: landing-fade-slide-down 0.6s ease both;
+}
+
+.landing-animate-fade-1 {
+  animation: landing-fade-slide-down 0.6s 0.1s ease both;
+}
+
+.landing-animate-fade-2 {
+  animation: landing-fade-slide-down 0.6s 0.2s ease both;
+}
+
+.landing-animate-fade-3 {
+  animation: landing-fade-slide-down 0.6s 0.3s ease both;
+}
+
+.landing-animate-fade-4 {
+  animation: landing-fade-slide-down 0.7s 0.4s ease both;
+}
+
+.landing-chip {
+  animation: landing-float-chip var(--dur, 6s) var(--delay, 0s) ease-in-out infinite;
+}
+
+.landing-pulse-dot {
+  animation: landing-pulse-dot 2s infinite;
+}

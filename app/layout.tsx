@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { DM_Sans, Bricolage_Grotesque } from 'next/font/google'
+import { DM_Sans, Bricolage_Grotesque, Fraunces, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ClerkProvider } from '@clerk/nextjs'
@@ -12,6 +12,16 @@ const dmSans = DM_Sans({
 const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
   variable: '--font-heading',
+})
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-fraunces',
+})
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-jakarta',
 })
 
 export const metadata: Metadata = {
@@ -31,7 +41,7 @@ export default function RootLayout({
       afterSignUpUrl="/"
     >
       <html lang="en" suppressHydrationWarning>
-        <body className={`${dmSans.variable} ${dmSans.className} ${bricolage.variable}`}>
+        <body className={`${dmSans.variable} ${dmSans.className} ${bricolage.variable} ${fraunces.variable} ${plusJakarta.variable}`}>
           <ThemeProvider
             attribute="class"
             defaultTheme="light"

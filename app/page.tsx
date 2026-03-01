@@ -18,6 +18,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { SignedIn, SignedOut, SignInButton, UserButton, useAuth } from '@clerk/nextjs';
 import { clerkAppearance, userButtonAppearance } from '@/lib/clerk-appearance';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
+import LandingPage from '@/components/LandingPage';
 
 
 const MAX_SAVED_FILTERS = 25;
@@ -618,6 +619,17 @@ function HomeContent() {
 }
 
 export default function Home() {
+  const { isSignedIn, isLoaded } = useAuth();
+
+  // Show nothing while Clerk loads to avoid flashing landing page for signed-in users
+  if (!isLoaded) {
+    return null;
+  }
+
+  if (!isSignedIn) {
+    return <LandingPage />;
+  }
+
   return (
     <FavoritesProvider>
       <HomeContent />
