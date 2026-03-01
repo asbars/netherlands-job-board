@@ -215,16 +215,26 @@ export async function GET(request: NextRequest) {
       console.log(`✅ Retrieved ${expiredIds.length} expired job IDs`);
 
       if (expiredIds.length > 0) {
-        // Use RPC to update server-side, avoids URL length limits
-        const { data: updatedCount, error: expireError } = await supabase
-          .rpc('mark_jobs_expired', { expired_external_ids: expiredIds });
+        // Batch into chunks of 500 to avoid oversized payloads
+        const BATCH_SIZE = 500;
+        for (let i = 0; i < expiredIds.length; i += BATCH_SIZE) {
+          const batch = expiredIds.slice(i, i + BATCH_SIZE);
+          const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+          const totalBatches = Math.ceil(expiredIds.length / BATCH_SIZE);
+          console.log(`📤 Sending batch ${batchNum}/${totalBatches} (${batch.length} IDs) to mark_jobs_expired...`);
 
-        if (expireError) {
-          console.error('❌ Error marking expired jobs:', expireError.message || JSON.stringify(expireError).slice(0, 100));
-        } else {
-          expiredCount = updatedCount || 0;
-          console.log(`✅ Marked ${expiredCount} jobs as expired (out of ${expiredIds.length} expired IDs)`);
+          const { data: updatedCount, error: expireError } = await supabase
+            .rpc('mark_jobs_expired', { expired_external_ids: batch });
+
+          if (expireError) {
+            console.error(`❌ Error marking expired jobs (batch ${batchNum}):`, expireError.message || JSON.stringify(expireError).slice(0, 200));
+          } else {
+            const batchExpired = updatedCount || 0;
+            expiredCount += batchExpired;
+            console.log(`✅ Batch ${batchNum}: marked ${batchExpired} jobs as expired`);
+          }
         }
+        console.log(`✅ Total: marked ${expiredCount} jobs as expired (out of ${expiredIds.length} expired IDs)`);
       }
 
       // Log expired jobs actor usage (fixed $20/month cost, not per-run)

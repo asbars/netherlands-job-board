@@ -193,24 +193,49 @@ export async function fetchExpiredJobs(): Promise<string[]> {
 
     console.log(`Dataset returned ${items.length} item(s), first item type: ${typeof items[0]}, isArray: ${Array.isArray(items[0])}`);
 
-    // Flatten all IDs into a single string array.
-    // The actor returns a flat array like [123, 456, ...] but the Apify SDK
-    // wraps it as a single dataset item, so items = [[123, 456, ...]].
+    // Parse expired IDs from the actor response.
+    // The actor returns [ID, ID, ID, ...] but the Apify SDK can wrap this in
+    // various ways: as a nested array [[ID, ...]], a comma-separated string,
+    // a JSON string, or individual numeric items.
     const expiredIds: string[] = [];
-    for (const item of items) {
-      if (Array.isArray(item)) {
-        // The whole array came as one dataset item
-        for (const id of item) {
-          expiredIds.push(String(id));
+
+    const extractIds = (value: unknown): void => {
+      if (Array.isArray(value)) {
+        for (const v of value) extractIds(v);
+      } else if (typeof value === 'number') {
+        expiredIds.push(String(value));
+      } else if (typeof value === 'string') {
+        const trimmed = value.trim();
+        // Try parsing as JSON first (e.g. "[123, 456, ...]")
+        if (trimmed.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) {
+              extractIds(parsed);
+              return;
+            }
+          } catch { /* not JSON, fall through */ }
         }
-      } else if (typeof item === 'object' && item !== null) {
-        // Object with an id field
-        expiredIds.push(String((item as any).id || (item as any).external_id));
-      } else {
-        // Primitive (number or string)
-        expiredIds.push(String(item));
+        // Comma-separated string of IDs (e.g. "123,456,789")
+        if (trimmed.includes(',')) {
+          for (const part of trimmed.split(',')) {
+            const id = part.trim();
+            if (id && /^\d+$/.test(id)) expiredIds.push(id);
+          }
+        } else if (/^\d+$/.test(trimmed)) {
+          expiredIds.push(trimmed);
+        }
+      } else if (typeof value === 'object' && value !== null) {
+        const obj = value as Record<string, unknown>;
+        const id = obj.id || obj.external_id;
+        if (id != null) expiredIds.push(String(id));
       }
+    };
+
+    for (const item of items) {
+      extractIds(item);
     }
+
     console.log(`Found ${expiredIds.length} expired job IDs (first 5: ${expiredIds.slice(0, 5).join(', ')})`);
 
     return expiredIds;
