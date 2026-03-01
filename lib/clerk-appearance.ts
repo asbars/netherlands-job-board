@@ -6,7 +6,7 @@ import { Appearance } from '@clerk/types';
  */
 export const clerkAppearance: Appearance = {
   variables: {
-    colorPrimary: 'hsl(0 0% 9%)', // --primary
+    colorPrimary: '#D4603A', // terracotta orange matching landing page
     colorBackground: 'hsl(0 0% 100%)', // --background
     colorInputBackground: 'hsl(0 0% 100%)', // --background
     colorInputText: 'hsl(0 0% 3.9%)', // --foreground
@@ -76,7 +76,7 @@ export const clerkAppearance: Appearance = {
  */
 export const userButtonAppearance: Appearance = {
   variables: {
-    colorPrimary: 'hsl(0 0% 9%)', // --primary (black, not purple)
+    colorPrimary: '#D4603A', // terracotta orange matching landing page
     colorText: 'hsl(0 0% 3.9%)', // --foreground
     colorTextSecondary: 'hsl(0 0% 45.1%)', // --muted-foreground
     borderRadius: '0.5rem',
