@@ -228,7 +228,7 @@ export async function fetchExpiredJobs(): Promise<string[]> {
       } else if (typeof value === 'object' && value !== null) {
         const obj = value as Record<string, unknown>;
         const id = obj.id || obj.external_id;
-        if (id != null) expiredIds.push(String(id));
+        if (id != null) extractIds(id);
       }
     };
 
