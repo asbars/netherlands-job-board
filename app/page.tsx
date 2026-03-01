@@ -22,7 +22,6 @@ import { FavoritesProvider } from '@/contexts/FavoritesContext';
 
 const MAX_SAVED_FILTERS = 25;
 const SAVED_FILTER_CONTEXT_KEY = 'savedFilterNewJobsContext';
-const NEW_BADGE_DURATION_MS = 12 * 60 * 60 * 1000; // 12 hours
 
 interface SavedFilterContext {
   filterId: number;
@@ -30,12 +29,29 @@ interface SavedFilterContext {
   expiresAt: number;
 }
 
+/**
+ * Calculate badge expiry as the earlier of +12 hours or next 4am local time.
+ */
+function calculateBadgeExpiry(): Date {
+  const now = new Date();
+  const twelveHours = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+
+  const next4am = new Date(now);
+  next4am.setHours(4, 0, 0, 0);
+  if (next4am <= now) {
+    next4am.setDate(next4am.getDate() + 1);
+  }
+
+  return new Date(Math.min(twelveHours.getTime(), next4am.getTime()));
+}
+
 // localStorage functions (fallback for when server-side storage fails or user not signed in)
 function saveSavedFilterContextLocal(filterId: number, lastCheckedAt: string) {
+  const expiresAt = calculateBadgeExpiry();
   const context: SavedFilterContext = {
     filterId,
     lastCheckedAt,
-    expiresAt: Date.now() + NEW_BADGE_DURATION_MS,
+    expiresAt: expiresAt.getTime(),
   };
   localStorage.setItem(SAVED_FILTER_CONTEXT_KEY, JSON.stringify(context));
 }
@@ -45,7 +61,6 @@ function loadSavedFilterContextLocal(): SavedFilterContext | null {
     const stored = localStorage.getItem(SAVED_FILTER_CONTEXT_KEY);
     if (!stored) return null;
     const context: SavedFilterContext = JSON.parse(stored);
-    // Check if expired
     if (Date.now() > context.expiresAt) {
       localStorage.removeItem(SAVED_FILTER_CONTEXT_KEY);
       return null;
@@ -330,11 +345,38 @@ function HomeContent() {
   // Handle applying a saved filter and mark it as checked
   async function handleApplySavedFilter(filterConditions: FilterCondition[], filterId: number) {
     setActiveSavedFilterId(filterId);
-    // Find the filter to get its last_checked_at before updating
     const savedFilter = savedFilters.find((f) => f.id === filterId);
+
+    // Check if this filter already has a valid (non-expired) badge
+    const now = new Date();
+    const hasValidBadge =
+      savedFilter?.badge_count_expires_at &&
+      new Date(savedFilter.badge_count_expires_at) > now &&
+      savedFilter.new_jobs_since;
+
+    if (hasValidBadge) {
+      // Badge is still valid - use the stored new_jobs_since boundary
+      // This preserves "New" badges on job cards across repeated clicks
+      setSavedFilterLastChecked(savedFilter.new_jobs_since!);
+      saveSavedFilterContextLocal(filterId, savedFilter.new_jobs_since!);
+      setFilters(filterConditions);
+
+      // Still call mark-checked to refresh context, but it will return early
+      try {
+        await fetch(`/api/saved-filters/${filterId}/mark-checked`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ expires_at: savedFilter.badge_count_expires_at }),
+        });
+      } catch {
+        // Non-critical, context refresh failed
+      }
+      return;
+    }
+
+    // Badge expired or never set - create new snapshot
     if (savedFilter?.last_checked_at) {
       setSavedFilterLastChecked(savedFilter.last_checked_at);
-      // Store in localStorage as fallback (server-side is handled by mark-checked API)
       saveSavedFilterContextLocal(filterId, savedFilter.last_checked_at);
     } else {
       setSavedFilterLastChecked(null);
@@ -343,25 +385,27 @@ function HomeContent() {
 
     setFilters(filterConditions);
 
-    // Mark filter as checked (also stores context and badge snapshot on server)
+    // Mark filter as checked (stores context, badge snapshot, and new_jobs_since)
     try {
+      const expiresAt = calculateBadgeExpiry();
       const response = await fetch(`/api/saved-filters/${filterId}/mark-checked`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expires_at: expiresAt.toISOString() }),
       });
 
       if (response.ok) {
         const result = await response.json();
-        // Update local state with the snapshotted badge count (persists for 12 hours)
         setSavedFilters((prev) =>
           prev.map((f) =>
             f.id === filterId
               ? {
                   ...f,
-                  // Keep the badge count (now snapshotted on server)
                   new_job_count: result.badge_count_snapshot ?? f.new_job_count,
                   last_checked_at: result.last_checked_at,
                   badge_count_snapshot: result.badge_count_snapshot,
                   badge_count_expires_at: result.badge_count_expires_at,
+                  new_jobs_since: result.new_jobs_since,
                 }
               : f
           )

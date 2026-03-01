@@ -7,7 +7,13 @@ const MAX_SAVED_FILTERS = 25;
 
 /**
  * GET /api/saved-filters
- * List all saved filters for the current user, with new job counts
+ * List all saved filters for the current user, with new job counts.
+ *
+ * Badge logic:
+ * - If badge is valid (non-expired): use new_jobs_since as boundary for count
+ *   (snapshot + any new jobs that appeared since last_checked_at)
+ * - If badge expired: clean up badge fields, update last_checked_at if needed,
+ *   then do a live count from last_checked_at
  */
 export async function GET() {
   try {
@@ -32,28 +38,49 @@ export async function GET() {
       return NextResponse.json([]);
     }
 
-    // Calculate new job counts for each filter
-    // Use badge_count_snapshot if not expired (for 12-hour persistence)
     const now = new Date();
+
     const filtersWithCounts = await Promise.all(
       data.map(async (filter) => {
         try {
-          // Check if we have a valid (non-expired) badge snapshot
-          const hasValidSnapshot =
-            filter.badge_count_snapshot !== null &&
-            filter.badge_count_expires_at &&
-            new Date(filter.badge_count_expires_at) > now;
+          const filterConditions = filter.filters as FilterCondition[];
 
-          if (hasValidSnapshot) {
-            // Use the snapshotted count
+          // Check if badge is still valid (non-expired)
+          const hasValidBadge =
+            filter.badge_count_expires_at &&
+            new Date(filter.badge_count_expires_at) > now &&
+            filter.new_jobs_since !== null;
+
+          if (hasValidBadge) {
+            // Badge is valid - use snapshot + delta (new jobs since last_checked_at)
+            // This is more efficient than recounting from new_jobs_since
+            const snapshot = filter.badge_count_snapshot ?? 0;
+            const delta = await countNewJobsForFilter(
+              filterConditions,
+              filter.last_checked_at
+            );
             return {
               ...filter,
-              new_job_count: filter.badge_count_snapshot,
+              new_job_count: snapshot + delta,
             };
           }
 
-          // No valid snapshot - calculate the live count
-          const filterConditions = filter.filters as FilterCondition[];
+          // Badge expired - clean up if needed
+          if (filter.new_jobs_since !== null && filter.badge_count_expires_at) {
+            // Badge just expired - clear badge fields
+            // last_checked_at was already set when the user clicked
+            await supabaseAdmin
+              .from('jobmarket_user_saved_filters')
+              .update({
+                badge_count_snapshot: null,
+                badge_count_expires_at: null,
+                new_jobs_since: null,
+              })
+              .eq('id', filter.id)
+              .eq('user_id', userId);
+          }
+
+          // No valid badge - live count from last_checked_at
           const newJobCount = await countNewJobsForFilter(
             filterConditions,
             filter.last_checked_at
@@ -61,6 +88,10 @@ export async function GET() {
           return {
             ...filter,
             new_job_count: newJobCount,
+            // Clear stale badge fields in the response
+            badge_count_snapshot: null,
+            badge_count_expires_at: null,
+            new_jobs_since: null,
           };
         } catch (err) {
           console.error(`Error counting new jobs for filter ${filter.id}:`, err);

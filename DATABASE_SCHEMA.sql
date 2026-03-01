@@ -250,6 +250,11 @@ CREATE TABLE jobmarket_user_saved_filters (
   notification_email TEXT,                              -- For future email notifications (nullable)
   notification_frequency TEXT CHECK (notification_frequency IN ('instant', 'daily', 'weekly')), -- For future email notifications
 
+  -- Badge persistence fields
+  badge_count_snapshot INT,                             -- Snapshotted count of new jobs at time of click
+  badge_count_expires_at TIMESTAMPTZ,                   -- When badge expires (min of 12h or next 4am local)
+  new_jobs_since TIMESTAMPTZ,                           -- Boundary for "new" detection (pre-click last_checked_at)
+
   CONSTRAINT unique_user_filter_name UNIQUE (user_id, name)
 );
 
