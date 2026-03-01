@@ -135,8 +135,9 @@ export async function GET(request: NextRequest) {
   }
   
   try {
-    // Get query parameters for flexible timeframe and limit
+    // Get query parameters
     const { searchParams } = new URL(request.url);
+    const expiredOnly = searchParams.get('expiredOnly') === 'true';
     const timeframeParam = searchParams.get('timeframe') || '24h';
     const limit = parseInt(searchParams.get('limit') || '1000', 10);
 
@@ -146,18 +147,6 @@ export async function GET(request: NextRequest) {
       ? (timeframeParam as '1h' | '24h' | '7d' | '6m')
       : '24h';
 
-    // Fetch new jobs from Apify (default: last 24 hours, Netherlands only)
-    console.log(`📥 Fetching new jobs from Apify (timeframe: ${timeframe}, limit: ${limit})...`);
-    const jobs = await fetchNewJobsFromAPI({
-      timeframe,
-      locationSearch: ['Netherlands'],
-      include_ai: true,
-      include_li: true,
-      limit,
-    });
-    
-    console.log(`✅ Retrieved ${jobs.length} jobs from Apify`);
-
     // Initialize Supabase with service role key for backend operations
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -165,45 +154,61 @@ export async function GET(request: NextRequest) {
 
     // --- Step 1: Insert/update new jobs ---
     let insertedCount = 0;
+    let jobsFetched = 0;
     let cost = 0;
 
-    if (jobs.length === 0) {
-      console.log('ℹ️ No new jobs found — skipping insert step');
+    if (expiredOnly) {
+      console.log('ℹ️ expiredOnly=true — skipping new jobs fetch');
     } else {
-      const transformedJobs = jobs.map(transformJobForDatabase);
-
-      console.log(`💾 Inserting ${transformedJobs.length} jobs into database...`);
-      const { data, error } = await supabase
-        .from('jobmarket_jobs')
-        .upsert(transformedJobs, {
-          onConflict: 'external_id',
-          ignoreDuplicates: false,
-        })
-        .select('id');
-
-      if (error) {
-        console.error('❌ Database error:', error);
-        throw error;
-      }
-
-      insertedCount = data?.length || 0;
-      console.log(`✅ Inserted/updated ${insertedCount} jobs`);
-
-      cost = jobs.length * 0.012; // $0.012 per job for API
-      await supabase.from('jobmarket_apify_usage_logs').insert({
-        actor: 'career-site-job-listing-api',
-        job_count: jobs.length,
-        cost: cost,
-        notes: 'Daily cron sync',
-        run_status: 'success',
+      console.log(`📥 Fetching new jobs from Apify (timeframe: ${timeframe}, limit: ${limit})...`);
+      const jobs = await fetchNewJobsFromAPI({
+        timeframe,
+        locationSearch: ['Netherlands'],
+        include_ai: true,
+        include_li: true,
+        limit,
       });
 
-      console.log(`💰 New jobs cost: $${cost.toFixed(2)}`);
+      jobsFetched = jobs.length;
+      console.log(`✅ Retrieved ${jobsFetched} jobs from Apify`);
+
+      if (jobsFetched === 0) {
+        console.log('ℹ️ No new jobs found — skipping insert step');
+      } else {
+        const transformedJobs = jobs.map(transformJobForDatabase);
+
+        console.log(`💾 Inserting ${transformedJobs.length} jobs into database...`);
+        const { data, error } = await supabase
+          .from('jobmarket_jobs')
+          .upsert(transformedJobs, {
+            onConflict: 'external_id',
+            ignoreDuplicates: false,
+          })
+          .select('id');
+
+        if (error) {
+          console.error('❌ Database error:', error);
+          throw error;
+        }
+
+        insertedCount = data?.length || 0;
+        console.log(`✅ Inserted/updated ${insertedCount} jobs`);
+
+        cost = jobsFetched * 0.012; // $0.012 per job for API
+        await supabase.from('jobmarket_apify_usage_logs').insert({
+          actor: 'career-site-job-listing-api',
+          job_count: jobsFetched,
+          cost: cost,
+          notes: 'Daily cron sync',
+          run_status: 'success',
+        });
+
+        console.log(`💰 New jobs cost: $${cost.toFixed(2)}`);
+      }
     }
 
     // --- Step 2: Mark expired jobs ---
     let expiredCount = 0;
-    let expiredCost = 0;
     try {
       console.log('📥 Fetching expired job IDs from Apify...');
       const expiredIds = await fetchExpiredJobs();
@@ -222,12 +227,11 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Log expired jobs actor usage
-      expiredCost = expiredIds.length * 0.001; // lower cost per ID check
+      // Log expired jobs actor usage (fixed $20/month cost, not per-run)
       await supabase.from('jobmarket_apify_usage_logs').insert({
         actor: 'career-site-job-listing-expired-jobs',
         job_count: expiredIds.length,
-        cost: expiredCost,
+        cost: 0,
         notes: `Daily expired jobs sync - marked ${expiredCount} as expired`,
         run_status: 'success',
       });
@@ -248,11 +252,11 @@ export async function GET(request: NextRequest) {
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log('========================================');
     console.log('📊 DAILY SYNC SUMMARY');
-    console.log(`   New jobs fetched:    ${jobs.length}`);
+    console.log(`   New jobs fetched:    ${jobsFetched}`);
     console.log(`   Jobs inserted/updated: ${insertedCount}`);
     console.log(`   Expired IDs received:  (see above)`);
     console.log(`   Jobs marked expired:   ${expiredCount}`);
-    console.log(`   Total cost:            $${(cost + expiredCost).toFixed(2)}`);
+    console.log(`   New jobs cost:          $${cost.toFixed(2)}`);
     console.log(`   Duration:              ${duration}s`);
     console.log('========================================');
 
@@ -260,9 +264,9 @@ export async function GET(request: NextRequest) {
       success: true,
       message: 'Daily sync completed successfully',
       jobsProcessed: insertedCount,
-      jobsFetched: jobs.length,
+      jobsFetched,
       jobsExpired: expiredCount,
-      cost: cost + expiredCost,
+      cost,
       durationSeconds: parseFloat(duration),
     });
     
