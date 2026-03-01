@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { FilterCondition } from '@/types/filters';
 import { SavedFilter } from '@/types/savedFilters';
 import MetabaseStyleFilters from '@/components/MetabaseStyleFilters';
@@ -411,6 +411,14 @@ function HomeContent() {
     }
   }
 
+  // Determine if the current filters differ from the active saved filter
+  const isFilterModified = useMemo(() => {
+    if (!activeSavedFilterId) return true; // No saved filter active — always show Save
+    const active = savedFilters.find(f => f.id === activeSavedFilterId);
+    if (!active) return true;
+    return JSON.stringify(filters) !== JSON.stringify(active.filters);
+  }, [filters, activeSavedFilterId, savedFilters]);
+
   return (
     <main className="min-h-screen">
       <div className="container mx-auto px-4 max-w-7xl">
@@ -507,6 +515,7 @@ function HomeContent() {
                   : null
               }
               onNewFilter={() => setActiveSavedFilterId(null)}
+              isFilterModified={isFilterModified}
             />
           </aside>
 

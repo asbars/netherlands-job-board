@@ -33,6 +33,7 @@ interface MetabaseStyleFiltersProps {
   disabled?: boolean;
   activeSavedFilterName?: string | null;
   onNewFilter?: () => void;
+  isFilterModified?: boolean;
 }
 
 export default function MetabaseStyleFilters({
@@ -52,6 +53,7 @@ export default function MetabaseStyleFilters({
   disabled = false,
   activeSavedFilterName = null,
   onNewFilter,
+  isFilterModified = true,
 }: MetabaseStyleFiltersProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFilter, setEditingFilter] = useState<FilterCondition | null>(null);
@@ -120,7 +122,7 @@ export default function MetabaseStyleFilters({
               )}
             </div>
             <div className="flex items-center gap-2">
-              {isSignedIn && filters.length > 0 && onSaveFilter && (
+              {isSignedIn && filters.length > 0 && onSaveFilter && isFilterModified && (
                 <Button
                   variant="ghost"
                   size="sm"
