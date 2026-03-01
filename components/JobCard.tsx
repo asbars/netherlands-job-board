@@ -107,6 +107,11 @@ export default function JobCard({ job, isFavorited, onToggleFavorite, isSignedIn
 
           {/* Badges row */}
           <div className="flex flex-wrap gap-2 text-sm">
+            {job.status === 'expired' && (
+              <Badge variant="outline" className="border-amber-400 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30">
+                Expired
+              </Badge>
+            )}
             {job.cities_derived && job.cities_derived.length > 0 && (
               <span className="flex items-center text-muted-foreground">
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
