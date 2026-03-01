@@ -48,21 +48,21 @@ export default function LandingPage() {
       />
 
       {/* NAV */}
-      <nav className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-6 lg:px-10 py-5 backdrop-blur-[12px]" style={{ background: 'rgba(250, 246, 239, 0.85)', borderBottom: '1px solid rgba(208, 160, 112, 0.15)' }}>
-        <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="Logo" className="w-10 h-10" />
-          <span className="font-fraunces text-2xl font-bold tracking-tight" style={{ color: '#D4603A' }}>
+      <nav className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-4 sm:px-6 lg:px-10 py-3 sm:py-5 backdrop-blur-[12px]" style={{ background: 'rgba(250, 246, 239, 0.85)', borderBottom: '1px solid rgba(208, 160, 112, 0.15)' }}>
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <img src="/logo.png" alt="Logo" className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" />
+          <span className="font-fraunces text-lg sm:text-2xl font-bold tracking-tight truncate" style={{ color: '#D4603A' }}>
             Netherlands<span style={{ color: '#2C1A0E' }}> Jobs</span>
           </span>
         </div>
-        <div className="flex gap-3 items-center">
+        <div className="flex gap-2 sm:gap-3 items-center flex-shrink-0">
           <SignInButton mode="modal">
-            <button className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors cursor-pointer" style={{ color: '#6B4226' }} onMouseEnter={e => { e.currentTarget.style.background = 'rgba(212, 96, 58, 0.08)'; e.currentTarget.style.color = '#D4603A'; }} onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#6B4226'; }}>
+            <button className="text-xs sm:text-sm font-semibold px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors cursor-pointer" style={{ color: '#6B4226' }} onMouseEnter={e => { e.currentTarget.style.background = 'rgba(212, 96, 58, 0.08)'; e.currentTarget.style.color = '#D4603A'; }} onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#6B4226'; }}>
               Sign in
             </button>
           </SignInButton>
           <SignUpButton mode="modal">
-            <button className="text-sm font-semibold text-white px-5 py-2.5 rounded-lg cursor-pointer transition-transform hover:-translate-y-px" style={{ background: '#D4603A', boxShadow: '0 2px 8px rgba(212, 96, 58, 0.3)' }}>
+            <button className="text-xs sm:text-sm font-semibold text-white px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-lg cursor-pointer transition-transform hover:-translate-y-px whitespace-nowrap" style={{ background: '#D4603A', boxShadow: '0 2px 8px rgba(212, 96, 58, 0.3)' }}>
               Get access →
             </button>
           </SignUpButton>
@@ -70,7 +70,7 @@ export default function LandingPage() {
       </nav>
 
       {/* HERO */}
-      <section className="min-h-screen flex flex-col items-center justify-center px-5 pt-28 pb-16 relative overflow-hidden">
+      <section className="min-h-screen flex flex-col items-center justify-center px-5 pt-24 sm:pt-28 pb-16 relative overflow-hidden">
         {/* Background blobs */}
         <div className="absolute w-[700px] h-[700px] rounded-full -top-[150px] -right-[200px] pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(232, 147, 58, 0.12) 0%, transparent 70%)' }} />
         <div className="absolute w-[500px] h-[500px] rounded-full bottom-0 -left-[150px] pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(212, 96, 58, 0.08) 0%, transparent 70%)' }} />
