@@ -220,7 +220,7 @@ export async function GET(request: NextRequest) {
           .rpc('mark_jobs_expired', { expired_external_ids: expiredIds });
 
         if (expireError) {
-          console.error('❌ Error marking expired jobs:', expireError);
+          console.error('❌ Error marking expired jobs:', expireError.message || JSON.stringify(expireError).slice(0, 100));
         } else {
           expiredCount = updatedCount || 0;
           console.log(`✅ Marked ${expiredCount} jobs as expired (out of ${expiredIds.length} expired IDs)`);

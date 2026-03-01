@@ -183,7 +183,7 @@ export async function fetchExpiredJobs(): Promise<string[]> {
       returnAsArray: true,
     });
 
-    console.log(`Expired jobs run completed: ${run.id}, status: ${run.status}`);
+    console.log(`Expired jobs run completed: ${run.id}, status: ${run.status}, datasetId: ${run.defaultDatasetId}`);
 
     if (run.status !== 'SUCCEEDED') {
       throw new Error(`Expired jobs actor run failed with status: ${run.status}`);
@@ -215,7 +215,8 @@ export async function fetchExpiredJobs(): Promise<string[]> {
 
     return expiredIds;
   } catch (error) {
-    console.error('Error fetching expired jobs:', error);
+    const errMsg = error instanceof Error ? error.message : String(error).slice(0, 100);
+    console.error('Error fetching expired jobs:', errMsg);
     throw error;
   }
 }
