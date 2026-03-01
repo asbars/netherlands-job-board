@@ -31,6 +31,8 @@ interface MetabaseStyleFiltersProps {
   onToggleNotifications?: (id: number, enabled: boolean) => Promise<void>;
   isLoadingSavedFilters?: boolean;
   disabled?: boolean;
+  activeSavedFilterName?: string | null;
+  onNewFilter?: () => void;
 }
 
 export default function MetabaseStyleFilters({
@@ -48,9 +50,12 @@ export default function MetabaseStyleFilters({
   onToggleNotifications,
   isLoadingSavedFilters = false,
   disabled = false,
+  activeSavedFilterName = null,
+  onNewFilter,
 }: MetabaseStyleFiltersProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFilter, setEditingFilter] = useState<FilterCondition | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleAddFilter = (filter: FilterCondition) => {
     onFiltersChange([...filters, filter]);
@@ -74,9 +79,17 @@ export default function MetabaseStyleFilters({
     setEditingFilter(null);
   };
 
-  const handleClearAll = () => {
+  const handleNewFilter = () => {
     onFiltersChange([]);
+    onNewFilter?.();
+    setIsCollapsed(false);
   };
+
+  const headerTitle = disabled
+    ? 'Filters (viewing favorites)'
+    : activeSavedFilterName && !disabled
+      ? activeSavedFilterName
+      : 'Filters';
 
   return (
     <>
@@ -84,11 +97,27 @@ export default function MetabaseStyleFilters({
         {/* Header */}
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex items-center gap-2">
               <CardTitle className={disabled ? 'text-muted-foreground' : ''}>
-                {disabled ? 'Filters (viewing favorites)' : 'Filters'}
+                {headerTitle}
               </CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">{getFilterDescription(filters)}</p>
+              {/* Collapse/expand toggle - only when filters exist */}
+              {filters.length > 0 && (
+                <button
+                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
+                  aria-label={isCollapsed ? 'Expand filters' : 'Collapse filters'}
+                >
+                  <svg
+                    className={`w-4 h-4 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              )}
             </div>
             <div className="flex items-center gap-2">
               {isSignedIn && filters.length > 0 && onSaveFilter && (
@@ -104,43 +133,54 @@ export default function MetabaseStyleFilters({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleClearAll}
+                  onClick={handleNewFilter}
                 >
-                  Clear all
+                  New
                 </Button>
               )}
             </div>
           </div>
+          {/* Collapsed summary */}
+          {isCollapsed && filters.length > 0 && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {filters.length} filter{filters.length !== 1 ? 's' : ''} active
+            </p>
+          )}
+          {!isCollapsed && (
+            <p className="text-xs text-muted-foreground mt-0.5">{getFilterDescription(filters)}</p>
+          )}
         </CardHeader>
 
-      {/* Filter Pills */}
-      <CardContent className="pb-4">
-        {filters.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {filters.map((filter) => (
-              <FilterPill
-                key={filter.id}
-                filter={filter}
-                onRemove={() => handleRemoveFilter(filter.id)}
-                onEdit={() => handleEditFilter(filter)}
-                dynamicOptions={dynamicOptions}
-              />
-            ))}
-          </div>
-        )}
+      {/* Filter Pills - hidden when collapsed */}
+      {!isCollapsed && (
+        <CardContent className="pb-4">
+          {filters.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {filters.map((filter) => (
+                <FilterPill
+                  key={filter.id}
+                  filter={filter}
+                  onRemove={() => handleRemoveFilter(filter.id)}
+                  onEdit={() => handleEditFilter(filter)}
+                  dynamicOptions={dynamicOptions}
+                />
+              ))}
+            </div>
+          )}
 
-        {/* Add Filter Button */}
-        <Button
-          variant="ghost"
-          onClick={() => setIsModalOpen(true)}
-          className="text-primary"
-        >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add filter
-        </Button>
-      </CardContent>
+          {/* Add Filter Button */}
+          <Button
+            variant="ghost"
+            onClick={() => setIsModalOpen(true)}
+            className="text-primary"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Add filter
+          </Button>
+        </CardContent>
+      )}
 
       {/* Result Count */}
       <div className="px-6 py-4 bg-muted border-t rounded-b-lg">

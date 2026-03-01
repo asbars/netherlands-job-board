@@ -467,8 +467,8 @@ function HomeContent() {
         {/* === MAIN CONTENT (3-column when scrolled, 2-column at top) === */}
         <div className="flex flex-col lg:flex-row gap-6 pb-6 pt-2">
           {/* Left sidebar - Compact branding (when scrolled) + Filters (always sticky) */}
-          <aside className={`w-full lg:w-96 flex-shrink-0 lg:sticky lg:self-start lg:overflow-y-auto transition-all duration-300 ${
-            isScrolled ? 'lg:top-4 lg:max-h-[calc(100vh-2rem)]' : 'lg:top-4 lg:max-h-[calc(100vh-2rem)]'
+          <aside className={`w-full lg:w-96 flex-shrink-0 lg:sticky lg:self-start transition-all duration-300 ${
+            isScrolled ? 'lg:top-4' : 'lg:top-4'
           }`}>
             {/* Compact branding - slides in when scrolled (desktop only) */}
             <div
@@ -501,6 +501,12 @@ function HomeContent() {
               onToggleNotifications={handleToggleNotifications}
               isLoadingSavedFilters={isLoadingSavedFilters}
               disabled={showingFavorites}
+              activeSavedFilterName={
+                activeSavedFilterId
+                  ? savedFilters.find(f => f.id === activeSavedFilterId)?.name ?? null
+                  : null
+              }
+              onNewFilter={() => setActiveSavedFilterId(null)}
             />
           </aside>
 
