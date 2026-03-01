@@ -210,24 +210,16 @@ export async function GET(request: NextRequest) {
       console.log(`✅ Retrieved ${expiredIds.length} expired job IDs`);
 
       if (expiredIds.length > 0) {
-        // Update in batches of 500 to avoid query size limits
-        const batchSize = 500;
-        for (let i = 0; i < expiredIds.length; i += batchSize) {
-          const batch = expiredIds.slice(i, i + batchSize);
-          const { data: updated, error: expireError } = await supabase
-            .from('jobmarket_jobs')
-            .update({ status: 'expired', last_updated: new Date().toISOString() })
-            .in('external_id', batch)
-            .eq('status', 'active')
-            .select('id');
+        // Use RPC to update server-side, avoids URL length limits
+        const { data: updatedCount, error: expireError } = await supabase
+          .rpc('mark_jobs_expired', { expired_external_ids: expiredIds });
 
-          if (expireError) {
-            console.error(`❌ Error marking expired batch ${i / batchSize + 1}:`, expireError);
-          } else {
-            expiredCount += updated?.length || 0;
-          }
+        if (expireError) {
+          console.error('❌ Error marking expired jobs:', expireError);
+        } else {
+          expiredCount = updatedCount || 0;
+          console.log(`✅ Marked ${expiredCount} jobs as expired (out of ${expiredIds.length} expired IDs)`);
         }
-        console.log(`✅ Marked ${expiredCount} jobs as expired`);
       }
 
       // Log expired jobs actor usage

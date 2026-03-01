@@ -191,20 +191,25 @@ export async function fetchExpiredJobs(): Promise<string[]> {
 
     const { items } = await apifyClient.dataset(run.defaultDatasetId).listItems();
 
-    // The actor returns numeric IDs. Depending on how Apify stores them,
-    // items could be: [123, 456, ...] or [[123, 456, ...]] or [{id: 123}, ...]
-    let expiredIds: string[];
-    if (items.length === 0) {
-      expiredIds = [];
-    } else if (Array.isArray(items[0])) {
-      // Single item that is the array itself
-      expiredIds = (items[0] as any[]).map((id: any) => String(id));
-    } else if (typeof items[0] === 'object' && items[0] !== null && !Array.isArray(items[0])) {
-      // Items are objects - extract the ID field
-      expiredIds = items.map((item: any) => String(item.id || item.external_id || item));
-    } else {
-      // Items are primitives (numbers/strings)
-      expiredIds = items.map((item: any) => String(item));
+    console.log(`Dataset returned ${items.length} item(s), first item type: ${typeof items[0]}, isArray: ${Array.isArray(items[0])}`);
+
+    // Flatten all IDs into a single string array.
+    // The actor returns a flat array like [123, 456, ...] but the Apify SDK
+    // wraps it as a single dataset item, so items = [[123, 456, ...]].
+    const expiredIds: string[] = [];
+    for (const item of items) {
+      if (Array.isArray(item)) {
+        // The whole array came as one dataset item
+        for (const id of item) {
+          expiredIds.push(String(id));
+        }
+      } else if (typeof item === 'object' && item !== null) {
+        // Object with an id field
+        expiredIds.push(String((item as any).id || (item as any).external_id));
+      } else {
+        // Primitive (number or string)
+        expiredIds.push(String(item));
+      }
     }
     console.log(`Found ${expiredIds.length} expired job IDs (first 5: ${expiredIds.slice(0, 5).join(', ')})`);
 
